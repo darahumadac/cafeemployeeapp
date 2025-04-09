@@ -50,17 +50,17 @@ public class AppDbContext : DbContext
                 var addEmployees = Enumerable.Range(1,5).Select(n => new Employee {
                     Name = $"Employee {n}",
                     Email = $"employee{n}@cafe.com",
-                    PhoneNumber = "82345678",
+                    PhoneNumber = $"8234567{n}",
                     Gender = Convert.ToBoolean(random.Next(0,2)),
                     CafeId = random.GetItems(cafes.ToArray(), 1)[0].Id,
                 });
                 employees.AddRange(addEmployees);
                 
                 //unassigned
-                employees.AddRange(Enumerable.Range(6,9).Select(n => new Employee {
+                employees.AddRange(Enumerable.Range(1,5).Select(n => new Employee {
                     Name = $"Employee Unassigned ",
                     Email = $"employee{n}@cafe.com",
-                    PhoneNumber = "92345678",
+                    PhoneNumber = $"9234567{n}",
                     Gender = Convert.ToBoolean(random.Next(0,2)),
                 }));
             
