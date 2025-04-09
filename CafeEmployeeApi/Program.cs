@@ -1,6 +1,5 @@
 using CafeEmployeeApi.Contracts;
 using CafeEmployeeApi.Database;
-using CafeEmployeeApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,8 +44,37 @@ app.MapGet("/cafes", async (AppDbContext dbContext, [FromQuery] string? location
 
 }).WithName("GetCafes");
 
-app.MapGet("/employees", ([FromQuery] string cafe) =>
+
+app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe = null) =>
 {
+    Guid cafeId = Guid.Empty;
+    if(!string.IsNullOrEmpty(cafe))
+    {
+        var validGuid = Guid.TryParse(cafe, out cafeId);
+        if(!validGuid)
+        {
+            return Results.Ok(new List<EmployeesResponse>());
+        }
+    }
+    
+    var employees = await dbContext.Employees
+        .Where(e => string.IsNullOrEmpty(cafe) || e.CafeId == cafeId)
+        .Include(e => e.AssignedCafe)
+        .ToListAsync();
+
+    var response = employees
+        .OrderByDescending(e => e.DaysWorked)
+        .ThenBy(e => e.Name)
+        .Select(e => new EmployeesResponse(
+            Id: e.Id,
+            Name: e.Name,
+            EmailAddress: e.Email,
+            PhoneNumber: e.PhoneNumber,
+            DaysWorked: e.DaysWorked,
+            Cafe: e.AssignedCafe?.Name ?? string.Empty
+        ));
+
+    return Results.Ok(response);
 
 }).WithName("GetEmployees");
 

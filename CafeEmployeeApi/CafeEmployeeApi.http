@@ -1,15 +1,33 @@
 @CafeEmployeeApi_HostAddress = http://localhost:5191
 
+### CAFES
 GET {{CafeEmployeeApi_HostAddress}}/cafes
 Accept: application/json
 ###
 GET {{CafeEmployeeApi_HostAddress}}/cafes?location=
 Accept: application/json
-
 ###
 GET {{CafeEmployeeApi_HostAddress}}/cafes?location=Philippines
 Accept: application/json
-
+###
+GET {{CafeEmployeeApi_HostAddress}}/cafes?location=us
+Accept: application/json
 ###
 GET {{CafeEmployeeApi_HostAddress}}/cafes?location=invalid
+Accept: application/json
+
+
+### EMPLOYEES
+GET {{CafeEmployeeApi_HostAddress}}/employees
+Accept: application/json
+###
+GET {{CafeEmployeeApi_HostAddress}}/employees?cafe=
+Accept: application/json
+
+###
+GET {{CafeEmployeeApi_HostAddress}}/employees?cafe=F3F38874-D98B-40A5-9637-AE0883ADDE08
+Accept: application/json
+
+###
+GET {{CafeEmployeeApi_HostAddress}}/employees?cafe=invalid
 Accept: application/json
