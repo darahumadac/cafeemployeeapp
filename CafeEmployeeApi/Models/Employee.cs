@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CafeEmployeeApi.Models;
 
@@ -27,6 +28,8 @@ public class Employee
 
     public Guid? CafeId { get; set; }
     public Cafe? AssignedCafe { get; set; } = null!;
+    public DateTime? StartDate { get; set; } = null!;
 
-    public List<EmploymentHistory>? EmploymentHistory { get; set; }
+    [NotMapped]
+    public int DaysWorked => StartDate == null ? 0 : DateTime.UtcNow.Subtract((DateTime)StartDate!).Days;
 }

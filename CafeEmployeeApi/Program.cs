@@ -1,3 +1,4 @@
+using CafeEmployeeApi.Contracts;
 using CafeEmployeeApi.Database;
 using CafeEmployeeApi.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -22,35 +23,70 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/cafes", ([FromQuery] string location) => {
-    
+app.MapGet("/cafes", async (AppDbContext dbContext, [FromQuery] string? location = null) =>
+{
+    var cafes = await dbContext.Cafes
+        .Where(c => string.IsNullOrEmpty(location) || c.Location == location)
+        .Include(c => c.Employees)
+        .OrderByDescending(c => c.Employees.Count)
+        .ThenBy(c => c.Name)
+        .ToListAsync();
+
+    var response = cafes.Select(c => new GetCafesResponse(
+        Name: c.Name,
+        Description: c.Description,
+        Employees: c.Employees.Count,
+        Location: c.Location,
+        Id: c.Id,
+        Logo: c.Logo
+    ));
+
+    return Results.Ok(response);
+
 }).WithName("GetCafes");
 
-app.MapGet("/employees", ([FromQuery] string cafe) => {
+app.MapGet("/employees", ([FromQuery] string cafe) =>
+{
 
 }).WithName("GetEmployees");
 
-app.MapPost("/cafe", (AppDbContext dbContext) => {    
+app.MapGet("/cafes/{id}", (Guid id) =>
+{
+
+}).WithName("GetCafe");
+
+app.MapGet("/employees/{id}", (string id) =>
+{
+
+}).WithName("GetEmployee");
+
+app.MapPost("/cafe", (AppDbContext dbContext) =>
+{
 
 }).WithName("AddCafe");
 
-app.MapPost("/employees", (AppDbContext dbContext) => {    
+app.MapPost("/employees", (AppDbContext dbContext) =>
+{
     //TODO: Add employee to cafe. no employee can be employed by multiple cafes within the same employment period 
 }).WithName("AddEmployee");
 
-app.MapPut("/cafe/{cafeId}", (Guid cafeId, AppDbContext dbContext) => {    
+app.MapPut("/cafe/{id}", (Guid id, AppDbContext dbContext) =>
+{
 
 }).WithName("UpdateCafe");
 
-app.MapPut("/employees/{employeeId}", (string employeeId, AppDbContext dbContext) => {    
+app.MapPut("/employees/{id}", (string id, AppDbContext dbContext) =>
+{
 
 }).WithName("UpdateEmployee");
 
-app.MapDelete("/cafe/{cafeId}", (Guid cafeId, AppDbContext dbContext) => {    
+app.MapDelete("/cafe/{id}", (Guid id, AppDbContext dbContext) =>
+{
 
 }).WithName("DeleteCafe");
 
-app.MapDelete("/employees/{employeeId}", (string employeeId, AppDbContext dbContext) => {    
+app.MapDelete("/employees/{id}", (string id, AppDbContext dbContext) =>
+{
 
 }).WithName("DeleteEmployee");
 

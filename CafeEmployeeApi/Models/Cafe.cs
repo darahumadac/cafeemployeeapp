@@ -21,6 +21,6 @@ public class Cafe
 
     public string Location { get; set; } = string.Empty;
 
-    public List<Employee> Employees { get; set; } = null!;
+    public ICollection<Employee> Employees { get; set; } = null!;
 
 }

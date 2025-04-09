@@ -55,6 +55,7 @@ public class AppDbContext : DbContext
                     PhoneNumber = $"8234567{n}",
                     Gender = Convert.ToBoolean(random.Next(0, 2)),
                     CafeId = random.GetItems(cafes.ToArray(), 1)[0].Id,
+                    StartDate = DateTime.UtcNow.AddDays(random.Next(-10, -6))
                 });
                 employees.AddRange(assignedEmployees);
 
@@ -68,23 +69,6 @@ public class AppDbContext : DbContext
                         Gender = Convert.ToBoolean(random.Next(0, 2)),
                     }));
 
-                dbContext.SaveChanges();
-            }
-
-            //seed employee history
-            var histories = dbContext.Set<EmploymentHistory>();
-            if (histories.Count() == 0)
-            {
-                var employeeList = employees.ToList();
-                var cafeList = cafes.ToList();
-                var employmentHistories = Enumerable.Range(1, 4).Select(n => new EmploymentHistory
-                {
-                    EmployeeId = employeeList[n].Id,
-                    CafeId = cafeList[n].Id,
-                    StartDate = DateTime.UtcNow.AddDays(random.Next(-10, -6)),
-                    EndDate = n % 2 == 0 ? DateTime.Now.AddDays(random.Next(-2, 1)) : null,
-                });
-                histories.AddRange(employmentHistories);
                 dbContext.SaveChanges();
             }
         });

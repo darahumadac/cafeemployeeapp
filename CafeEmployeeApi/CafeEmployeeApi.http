@@ -1,6 +1,15 @@
 @CafeEmployeeApi_HostAddress = http://localhost:5191
 
-GET {{CafeEmployeeApi_HostAddress}}/weatherforecast/
+GET {{CafeEmployeeApi_HostAddress}}/cafes
+Accept: application/json
+###
+GET {{CafeEmployeeApi_HostAddress}}/cafes?location=
 Accept: application/json
 
 ###
+GET {{CafeEmployeeApi_HostAddress}}/cafes?location=Philippines
+Accept: application/json
+
+###
+GET {{CafeEmployeeApi_HostAddress}}/cafes?location=invalid
+Accept: application/json
