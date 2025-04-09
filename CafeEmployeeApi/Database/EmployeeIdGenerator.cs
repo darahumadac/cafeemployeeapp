@@ -11,7 +11,7 @@ public class EmployeeIdGenerator : ValueGenerator<string>
 
     public override string Next(EntityEntry entry)
     {
-        var guid = BitConverter.ToInt128(Guid.NewGuid().ToByteArray());
+        var guid = new BigInteger(Guid.NewGuid().ToByteArray().Concat(new byte[] {0}).ToArray());
         return $"UI{base62(guid)}";
     }
     private readonly string _validChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";

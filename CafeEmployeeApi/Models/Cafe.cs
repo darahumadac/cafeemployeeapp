@@ -9,7 +9,8 @@ public class Cafe
     public Guid Id { get; set; }
     
     [Required]
-    [Length(6, 10)]
+    [MinLength(6)]
+    [MaxLength(10)]
     public string Name { get; set; } = string.Empty;
 
     [Required]

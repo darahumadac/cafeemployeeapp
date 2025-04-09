@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CafeEmployeeApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250409110526_InitDbStructure")]
-    partial class InitDbStructure
+    [Migration("20250409122710_InitDb")]
+    partial class InitDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -45,7 +45,8 @@ namespace CafeEmployeeApi.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.HasKey("Id");
 
@@ -57,11 +58,8 @@ namespace CafeEmployeeApi.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<Guid>("AssignedCafeId")
+                    b.Property<Guid?>("CafeId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("CafeId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -75,30 +73,75 @@ namespace CafeEmployeeApi.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("PhoneNumber")
-                        .HasColumnType("int");
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignedCafeId");
+                    b.HasIndex("CafeId");
 
                     b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("CafeEmployeeApi.Models.EmploymentHistory", b =>
+                {
+                    b.Property<string>("EmployeeId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("CafeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EmployeeId", "CafeId");
+
+                    b.HasIndex("CafeId");
+
+                    b.ToTable("EmploymentHistory");
                 });
 
             modelBuilder.Entity("CafeEmployeeApi.Models.Employee", b =>
                 {
                     b.HasOne("CafeEmployeeApi.Models.Cafe", "AssignedCafe")
                         .WithMany("Employees")
-                        .HasForeignKey("AssignedCafeId")
+                        .HasForeignKey("CafeId");
+
+                    b.Navigation("AssignedCafe");
+                });
+
+            modelBuilder.Entity("CafeEmployeeApi.Models.EmploymentHistory", b =>
+                {
+                    b.HasOne("CafeEmployeeApi.Models.Cafe", "Cafe")
+                        .WithMany()
+                        .HasForeignKey("CafeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AssignedCafe");
+                    b.HasOne("CafeEmployeeApi.Models.Employee", "Employee")
+                        .WithMany("EmploymentHistory")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cafe");
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("CafeEmployeeApi.Models.Cafe", b =>
                 {
                     b.Navigation("Employees");
+                });
+
+            modelBuilder.Entity("CafeEmployeeApi.Models.Employee", b =>
+                {
+                    b.Navigation("EmploymentHistory");
                 });
 #pragma warning restore 612, 618
         }

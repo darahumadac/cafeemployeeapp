@@ -4,8 +4,8 @@ namespace CafeEmployeeApi.Models;
 
 public class Employee
 {
-    //TODO: generate own Id in format UIXXXXXXX -> X is alphanumeric. use ef core sequences, then get base62
-    public string Id { get; set; } = string.Empty;
+    //UIXXXXXXX -> X is alphanumeric
+    public string Id { get; set; } = null!;
  
     [Required]
     [MaxLength(50)] //in db set to 50, just in case;
@@ -17,12 +17,16 @@ public class Employee
 
     [Required]
     [Phone]
-    public int PhoneNumber { get; set; } //starts with 8 or 9 and have 8 digits
+    [MinLength(8)]
+    [MaxLength(8)]
+    [RegularExpression(@"^[8|9][0-9]{7}$")]
+    public string PhoneNumber { get; set; } = string.Empty; //starts with 8 or 9 and have 8 digits
 
     [Required]
     public bool Gender { get; set; } //0 - Male, 1 - Female
 
-    public int CafeId { get; set; }
-    public Cafe AssignedCafe { get; set; } = null!;
+    public Guid? CafeId { get; set; }
+    public Cafe? AssignedCafe { get; set; } = null!;
 
+    public List<EmploymentHistory>? EmploymentHistory { get; set; }
 }

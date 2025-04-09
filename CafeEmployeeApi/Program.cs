@@ -35,7 +35,7 @@ app.MapPost("/cafe", (AppDbContext dbContext) => {
 }).WithName("AddCafe");
 
 app.MapPost("/employees", (AppDbContext dbContext) => {    
-
+    //TODO: Add employee to cafe. no employee can be employed by multiple cafes within the same employment period 
 }).WithName("AddEmployee");
 
 app.MapPut("/cafe/{cafeId}", (Guid cafeId, AppDbContext dbContext) => {    
@@ -56,8 +56,3 @@ app.MapDelete("/employees/{employeeId}", (string employeeId, AppDbContext dbCont
 
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
