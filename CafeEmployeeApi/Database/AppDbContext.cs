@@ -5,7 +5,7 @@ namespace CafeEmployeeApi.Database;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions){}
+    public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions) { }
     public DbSet<Cafe> Cafes { get; set; }
     public DbSet<Employee> Employees { get; set; }
 
@@ -25,49 +25,69 @@ public class AppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSeeding((dbContext, _) => {
+        optionsBuilder.UseSeeding((dbContext, _) =>
+        {
+            var random = new Random();
             //seed cafes
             var cafes = dbContext.Set<Cafe>();
-            if(cafes.Count() == 0)
+            if (cafes.Count() == 0)
             {
-                var addCafes = Enumerable.Range(1,5).Select(n => 
-                new Cafe{
-                    Name = $"Cafe {n}", 
-                    Description = $"Best cafe in town - {n}", 
-                    Location = new Random().GetItems(["Singapore", "US", "Philippines"], 1)[0]
-                });
+                var addCafes = Enumerable.Range(1, 5).Select(n =>
+                    new Cafe
+                    {
+                        Name = $"Cafe {n}",
+                        Description = $"Best cafe in town - {n}",
+                        Location = random.GetItems(["Singapore", "US", "Philippines"], 1)[0]
+                    });
                 cafes.AddRange(addCafes);
+                dbContext.SaveChanges();
             }
-            
-            dbContext.SaveChanges();    
 
             //seed employees
-            var random = new Random();
             var employees = dbContext.Set<Employee>();
-            if(employees.Count() == 0)
+            if (employees.Count() == 0)
             {
                 //assigned
-                var addEmployees = Enumerable.Range(1,5).Select(n => new Employee {
+                var assignedEmployees = Enumerable.Range(1, 5).Select(n => new Employee
+                {
                     Name = $"Employee {n}",
                     Email = $"employee{n}@cafe.com",
                     PhoneNumber = $"8234567{n}",
-                    Gender = Convert.ToBoolean(random.Next(0,2)),
+                    Gender = Convert.ToBoolean(random.Next(0, 2)),
                     CafeId = random.GetItems(cafes.ToArray(), 1)[0].Id,
                 });
-                employees.AddRange(addEmployees);
-                
+                employees.AddRange(assignedEmployees);
+
                 //unassigned
-                employees.AddRange(Enumerable.Range(1,5).Select(n => new Employee {
-                    Name = $"Employee Unassigned ",
-                    Email = $"employee{n}@cafe.com",
-                    PhoneNumber = $"9234567{n}",
-                    Gender = Convert.ToBoolean(random.Next(0,2)),
-                }));
-            
+                employees.AddRange(
+                    Enumerable.Range(1, 5).Select(n => new Employee
+                    {
+                        Name = $"Employee Unassigned ",
+                        Email = $"employee{n}@cafe.com",
+                        PhoneNumber = $"9234567{n}",
+                        Gender = Convert.ToBoolean(random.Next(0, 2)),
+                    }));
+
+                dbContext.SaveChanges();
             }
-            dbContext.SaveChanges();
-            
+
+            //seed employee history
+            var histories = dbContext.Set<EmploymentHistory>();
+            if (histories.Count() == 0)
+            {
+                var employeeList = employees.ToList();
+                var cafeList = cafes.ToList();
+                var employmentHistories = Enumerable.Range(1, 4).Select(n => new EmploymentHistory
+                {
+                    EmployeeId = employeeList[n].Id,
+                    CafeId = cafeList[n].Id,
+                    StartDate = DateTime.UtcNow.AddDays(random.Next(-10, -6)),
+                    EndDate = n % 2 == 0 ? DateTime.Now.AddDays(random.Next(-2, 1)) : null,
+                });
+                histories.AddRange(employmentHistories);
+                dbContext.SaveChanges();
+            }
         });
     }
-    
+
 }
