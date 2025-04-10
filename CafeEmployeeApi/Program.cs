@@ -38,9 +38,14 @@ var app = builder.Build();
 app.UseExceptionHandler(new ExceptionHandlerOptions
 {
     AllowStatusCode404Response = true,
-    StatusCodeSelector = ex => ex is BadHttpRequestException
-        ? StatusCodes.Status400BadRequest
-        : StatusCodes.Status500InternalServerError
+    StatusCodeSelector = ex => {
+        var statusCode =  ex switch
+        {
+            BadHttpRequestException => StatusCodes.Status400BadRequest,
+            _ => StatusCodes.Status500InternalServerError
+        };
+        return statusCode;
+    }
 });
 
 // Configure the HTTP request pipeline.
@@ -172,11 +177,19 @@ app.MapPost("/cafe", async (CafeRequest request, AppDbContext dbContext, IValida
         Logo = request.Logo
     };
 
-    dbContext.Cafes.Add(newCafe);
+    try
+    {
+        dbContext.Cafes.Add(newCafe);
+        await dbContext.SaveChangesAsync();
+        return Results.CreatedAtRoute("GetCafe", new {id = newCafe.Id.ToString()}, newCafe);
 
-    await dbContext.SaveChangesAsync();
+    }catch(DbUpdateException ex)
+    {
+        //TODO: add logging
+        return Results.Problem(detail: "The cafe already exists in the location", statusCode: 409);
+    }
 
-    return Results.CreatedAtRoute("GetCafe", new {id = newCafe.Id.ToString()}, newCafe);
+    
 
 }).WithName("AddCafe");
 
@@ -196,20 +209,27 @@ app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext,
         StartDate = request.AssignedCafeId != null ? DateTime.UtcNow : null
     };
 
-    dbContext.Employees.Add(newEmployee);
-    
-    
-    await dbContext.SaveChangesAsync();
+    try
+    {
+        dbContext.Employees.Add(newEmployee);
 
-    return Results.CreatedAtRoute("GetEmployee", new {id = newEmployee.Id}, new {
-        id = newEmployee.Id,
-        name = newEmployee.Name,
-        email = newEmployee.Email,
-        phoneNumber = newEmployee.PhoneNumber,
-        gender = Convert.ToInt16(newEmployee.Gender),
-        cafeId = newEmployee.CafeId,
-        daysWorked = 0
-    });
+        await dbContext.SaveChangesAsync();
+
+        return Results.CreatedAtRoute("GetEmployee", new {id = newEmployee.Id}, new {
+            id = newEmployee.Id,
+            name = newEmployee.Name,
+            email = newEmployee.Email,
+            phoneNumber = newEmployee.PhoneNumber,
+            gender = Convert.ToInt16(newEmployee.Gender),
+            cafeId = newEmployee.CafeId,
+            daysWorked = 0
+        });
+    }
+    catch(DbUpdateException ex)
+    {
+        return Results.Problem(detail: "The employee already exists", statusCode: 409);
+    }
+    
 
 
 }).WithName("AddEmployee");
@@ -239,10 +259,15 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
     cafe.Location = request.Location;
     cafe.Logo = request.Logo;
 
-    await dbContext.SaveChangesAsync();
-    
-    return Results.Ok();
+    try
+    {
+        await dbContext.SaveChangesAsync();
+        return Results.Ok();
 
+    }catch(DbUpdateException ex)
+    {
+        return Results.Problem(detail: "The cafe already exists in the location", statusCode: 409);
+    }
 
 }).WithName("UpdateCafe");
 
@@ -275,9 +300,16 @@ app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbCon
     employee.Gender = Convert.ToBoolean(request.Gender);
     employee.CafeId = newCafeId;
 
-    await dbContext.SaveChangesAsync();
+    try
+    {
+        await dbContext.SaveChangesAsync();
+        return Results.Ok();
+    }catch(DbUpdateException ex)
+    {
+        return Results.Problem(detail: "The employee already exists", statusCode: 409);
+    }
 
-    return Results.Ok();
+    
 
 }).WithName("UpdateEmployee");
 

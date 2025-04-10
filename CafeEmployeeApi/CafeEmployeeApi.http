@@ -30,7 +30,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "NewCafe1",
+    "name": "Cafe 1",
     "description": "Created best cafe ever!!!",
     "location": "Singapore"
 }
@@ -54,8 +54,9 @@ Accept: application/json
 PUT {{CafeEmployeeApi_HostAddress}}/cafe/9ddea15d-a385-406f-9afc-4ba1d38458dd
 Content-Type: application/json
 Accept: application/json
+
 {
-    "name": "NewCafeUp",
+    "name": "Cafe 1",
     "description": "updated desc",
     "location": "Singapore"
 }
@@ -106,9 +107,9 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "noassign2",
-    "emailAddress": "dudududu@gmail.com",
-    "phoneNumber": "88123456",
+    "name": "Employee 1",
+    "emailAddress": "employee1@cafe.com",
+    "phoneNumber": "82345671",
     "gender": 0
 }
 ###

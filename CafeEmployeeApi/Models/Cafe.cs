@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CafeEmployeeApi.Models;
 
+[Index(nameof(Name), nameof(Location), IsUnique = true)]
 public class Cafe
 {
     public Guid Id { get; set; }
@@ -19,6 +20,8 @@ public class Cafe
 
     public byte[]? Logo { get; set; }
 
+    [Required]
+    [MaxLength(100)]
     public string Location { get; set; } = string.Empty;
 
     public ICollection<Employee> Employees { get; set; } = null!;

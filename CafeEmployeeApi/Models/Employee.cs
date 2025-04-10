@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace CafeEmployeeApi.Models;
 
+[Index(nameof(Name), nameof(Email), nameof(PhoneNumber), IsUnique = true)]
 public class Employee
 {
     //UIXXXXXXX -> X is alphanumeric
