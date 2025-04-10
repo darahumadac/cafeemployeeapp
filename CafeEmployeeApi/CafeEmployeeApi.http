@@ -70,3 +70,37 @@ Accept: application/json
 GET {{CafeEmployeeApi_HostAddress}}/employees/xxx
 Accept: application/json
 
+###
+POST {{CafeEmployeeApi_HostAddress}}/employee
+Content-Type: application/json
+Accept: application/json
+
+{
+    "name": "Dudu four",
+    "emailAddress": "dudududu@gmail.com",
+    "phoneNumber": "88123456",
+    "gender": 1,
+    "assignedCafeId": "F3F38874-D98B-40A5-9637-AE0883ADDE08"
+}
+###
+POST {{CafeEmployeeApi_HostAddress}}/employee
+Content-Type: application/json
+Accept: application/json
+
+{
+    "name": "noassign2",
+    "emailAddress": "dudududu@gmail.com",
+    "phoneNumber": "88123456",
+    "gender": 0
+}
+###
+POST {{CafeEmployeeApi_HostAddress}}/employee
+Content-Type: application/json
+Accept: application/json
+
+{
+    "name": "T",
+    "emailAddress": "T",
+    "phoneNumber": "9000000x"
+}
+

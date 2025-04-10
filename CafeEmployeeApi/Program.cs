@@ -1,4 +1,3 @@
-using CafeEmployeeApi.Contracts;
 using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Contracts.Queries;
 using CafeEmployeeApi.Database;
@@ -16,10 +15,25 @@ builder.Services.AddOpenApi();
 //Database
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("AppDb")));
 
+//TODO: add extension method for validators
+//TODO: add logging
 //Validation
 builder.Services.AddScoped<IValidator<CreateCafeRequest>, CreateCafeRequestValidator>();
+builder.Services.AddScoped<IValidator<CreateEmployeeRequest>, CreateEmployeeRequestValidator>();
+
+//for exception handling
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+//Set exception handler
+app.UseExceptionHandler(new ExceptionHandlerOptions
+{
+    AllowStatusCode404Response = true,
+    StatusCodeSelector = ex => ex is BadHttpRequestException
+        ? StatusCodes.Status400BadRequest
+        : StatusCodes.Status500InternalServerError
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -164,9 +178,36 @@ app.MapPost("/cafe", async (CreateCafeRequest request, AppDbContext dbContext, I
 
 }).WithName("AddCafe");
 
-app.MapPost("/employees", (AppDbContext dbContext) =>
+app.MapPost("/employee", async (CreateEmployeeRequest request, AppDbContext dbContext, IValidator<CreateEmployeeRequest> validator) =>
 {
-    //TODO: Add employee to cafe. no employee can be employed by multiple cafes within the same employment period 
+    var validationResult = await validator.ValidateAsync(request);
+    if(!validationResult.IsValid)
+    {
+        return Results.ValidationProblem(validationResult.ToDictionary());
+    }
+    var newEmployee = new Employee{
+        Name = request.Name,
+        Email = request.EmailAddress,
+        PhoneNumber = request.PhoneNumber,
+        Gender = Convert.ToBoolean(request.Gender),
+        CafeId = request.AssignedCafeId != null ? Guid.Parse(request.AssignedCafeId) : null,
+    };
+
+    dbContext.Employees.Add(newEmployee);
+    
+    
+    await dbContext.SaveChangesAsync();
+
+    return Results.CreatedAtRoute("GetEmployee", new {id = newEmployee.Id}, new {
+        id = newEmployee.Id,
+        name = newEmployee.Name,
+        email = newEmployee.Email,
+        phoneNumber = newEmployee.PhoneNumber,
+        gender = Convert.ToInt16(newEmployee.Gender),
+        cafeId = newEmployee.CafeId
+    });
+
+
 }).WithName("AddEmployee");
 
 app.MapPut("/cafe/{id}", (Guid id, AppDbContext dbContext) =>

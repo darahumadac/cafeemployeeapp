@@ -12,9 +12,18 @@ public class CreateCafeRequestValidator : AbstractValidator<CreateCafeRequest>
 {
     public CreateCafeRequestValidator()
     {
-        RuleFor(r => r.Name).NotNull().NotEmpty().Length(6, 10);
-        RuleFor(r => r.Description).NotNull().NotEmpty().MaximumLength(256);
+        RuleFor(r => r.Name)
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty()
+            .Length(6, 10);
+
+        RuleFor(r => r.Description)
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty()
+            .MaximumLength(256);
+
         //TODO: Add logo validation
-        RuleFor(r => r.Location).NotNull().NotEmpty();
+        
+        RuleFor(r => r.Location).NotEmpty();
     }
 }

@@ -27,7 +27,7 @@ public class Employee
     public bool Gender { get; set; } //0 - Male, 1 - Female
 
     public Guid? CafeId { get; set; }
-    public Cafe? AssignedCafe { get; set; } = null!;
+    public Cafe? AssignedCafe { get; set; }
     public DateTime? StartDate { get; set; } = null!;
 
     [NotMapped]
