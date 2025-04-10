@@ -20,8 +20,8 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(buil
 //TODO: add logging
 
 //TODO: trim all strings, html encode strings, normalize strings
-//TODO: add created date and updated date for records
 //TODO: add etag and last modified headers for create and update request
+//TODO: cqrs
 
 //Validation
 builder.Services.AddScoped<IValidator<CafeRequest>, CafeRequestValidator>();
@@ -296,9 +296,10 @@ app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbCon
     var currentCafeId = employee.CafeId;
 
     //update start date only when changing assigned cafe
+    var now =  DateTime.UtcNow;
     if(newCafeId != currentCafeId)
     {
-        employee.StartDate = newCafeId != null ? DateTime.UtcNow :  null;
+        employee.StartDate = newCafeId != null ? now :  null;
     }
     
     employee.Name = request.Name;
@@ -306,7 +307,7 @@ app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbCon
     employee.PhoneNumber = request.PhoneNumber;
     employee.Gender = Convert.ToBoolean(request.Gender);
     employee.CafeId = newCafeId;
-    employee.UpdatedDate = DateTime.UtcNow;
+    employee.UpdatedDate = now;
 
     try
     {

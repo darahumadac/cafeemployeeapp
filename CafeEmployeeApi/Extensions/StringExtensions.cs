@@ -1,3 +1,5 @@
+using System.Web;
+
 namespace CafeEmployeeApi.Extensions;
 
 public static class StringExtensions
@@ -10,5 +12,10 @@ public static class StringExtensions
             return Guid.TryParse(id, out guid);
         }
         return false;
+    }
+
+    public static string Sanitize(this string str)
+    {
+        return HttpUtility.HtmlEncode(str.Trim());
     }
 }

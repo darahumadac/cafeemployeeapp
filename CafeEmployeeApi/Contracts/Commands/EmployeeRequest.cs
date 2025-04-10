@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using CafeEmployeeApi.Database;
 using FluentValidation;
 
@@ -27,7 +28,7 @@ public class EmployeeRequestValidator : AbstractValidator<EmployeeRequest>
         RuleFor(r => r.PhoneNumber)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()
-            .Must(number => number.Length == 8 && (number.StartsWith("8") || number.StartsWith("9")))
+            .Must(number => Regex.IsMatch(number, @"^[8|9][0-9]{7}$"))
                 .WithMessage("'Phone Number' is not a valid SG phone number");
         
         

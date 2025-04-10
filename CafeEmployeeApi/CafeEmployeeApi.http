@@ -133,11 +133,11 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "new startu",
+    "name": "darahu",
     "emailAddress": "dudududu@gmail.coms",
     "phoneNumber": "88123459",
     "gender": 1,
-    "assignedCafeId": "ED13F4E7-51D1-4B89-82A3-2B7D085978F1"
+    "assignedCafeId": "DE15717D-F7AF-466E-886E-F485C0A712F9"
     
 
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using CafeEmployeeApi.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace CafeEmployeeApi.Models;
@@ -7,12 +8,25 @@ namespace CafeEmployeeApi.Models;
 [Index(nameof(Name), nameof(Email), nameof(PhoneNumber), IsUnique = true)]
 public class Employee : Auditable
 {
+    private string _name = string.Empty;
+
     //UIXXXXXXX -> X is alphanumeric
     public string Id { get; set; } = null!;
- 
+
     [Required]
     [MaxLength(50)] //in db set to 50, just in case;
-    public string Name { get; set; } = string.Empty;
+    public string Name
+    {
+        get
+        {
+            return _name;
+        }
+        set
+        {
+            _name = value.Sanitize();
+        }
+
+    }
 
     [Required]
     [EmailAddress]
