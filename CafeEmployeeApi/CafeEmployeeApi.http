@@ -24,6 +24,29 @@ Accept: application/json
 GET {{CafeEmployeeApi_HostAddress}}/cafes/xxx
 Accept: application/json
 
+### Create Cafe Requests
+POST {{CafeEmployeeApi_HostAddress}}/cafe
+Content-Type: application/json
+Accept: application/json
+
+{
+    "name": "MyBestCafe",
+    "description": "Created best cafe ever!!!",
+    "location": "Singapore"
+}
+###
+POST {{CafeEmployeeApi_HostAddress}}/cafe
+Content-Type: application/json
+Accept: application/json
+
+{
+    "name": "My Invalid Cafeeeee",
+    "description": "Created best cafe ever!!! Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!",
+    "location": ""
+}
+
+
+
 ### EMPLOYEES
 GET {{CafeEmployeeApi_HostAddress}}/employees
 Accept: application/json

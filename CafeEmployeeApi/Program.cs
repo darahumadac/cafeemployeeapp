@@ -2,6 +2,8 @@ using CafeEmployeeApi.Contracts;
 using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Contracts.Queries;
 using CafeEmployeeApi.Database;
+using CafeEmployeeApi.Models;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +15,9 @@ builder.Services.AddOpenApi();
 
 //Database
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("AppDb")));
+
+//Validation
+builder.Services.AddScoped<IValidator<CreateCafeRequest>, CreateCafeRequestValidator>();
 
 var app = builder.Build();
 
@@ -136,8 +141,26 @@ app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext) =>
 
 }).WithName("GetEmployee");
 
-app.MapPost("/cafe", (AppDbContext dbContext) =>
+app.MapPost("/cafe", async (CreateCafeRequest request, AppDbContext dbContext, IValidator<CreateCafeRequest> validator) =>
 {
+    var validationResult = await validator.ValidateAsync(request);
+    if(!validationResult.IsValid)
+    {
+        return Results.ValidationProblem(validationResult.ToDictionary());
+    }
+    
+    var newCafe = new Cafe{
+        Name = request.Name,
+        Description = request.Description,
+        Location = request.Location,
+        Logo = request.Logo
+    };
+
+    dbContext.Cafes.Add(newCafe);
+
+    await dbContext.SaveChangesAsync();
+
+    return Results.CreatedAtRoute("GetCafe", new {id = newCafe.Id.ToString()}, newCafe);
 
 }).WithName("AddCafe");
 
