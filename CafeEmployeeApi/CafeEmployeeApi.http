@@ -30,7 +30,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "Cafe 1",
+    "name": "CafeNew2",
     "description": "Created best cafe ever!!!",
     "location": "Singapore"
 }
@@ -107,9 +107,9 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "Employee 1",
+    "name": "EmpNew",
     "emailAddress": "employee1@cafe.com",
-    "phoneNumber": "82345671",
+    "phoneNumber": "82345672",
     "gender": 0
 }
 ###

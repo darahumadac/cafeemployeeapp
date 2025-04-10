@@ -179,7 +179,14 @@ app.MapPost("/cafe", async (CafeRequest request, AppDbContext dbContext, IValida
     {
         dbContext.Cafes.Add(newCafe);
         await dbContext.SaveChangesAsync();
-        return Results.CreatedAtRoute("GetCafe", new {id = newCafe.Id.ToString()}, newCafe);
+        var response = new CreateCafeResponse(
+            Id: newCafe.Id,
+            Name: newCafe.Name,
+            Description: newCafe.Description,
+            Location: newCafe.Location,
+            Logo: newCafe.Logo
+        );
+        return Results.CreatedAtRoute("GetCafe", new {id = newCafe.Id.ToString()}, response);
 
     }catch(DbUpdateException ex)
     {
@@ -213,15 +220,16 @@ app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext,
 
         await dbContext.SaveChangesAsync();
 
-        return Results.CreatedAtRoute("GetEmployee", new {id = newEmployee.Id}, new {
-            id = newEmployee.Id,
-            name = newEmployee.Name,
-            email = newEmployee.Email,
-            phoneNumber = newEmployee.PhoneNumber,
-            gender = Convert.ToInt16(newEmployee.Gender),
-            cafeId = newEmployee.CafeId,
-            daysWorked = 0
-        });
+        var response = new CreateEmployeeResponse(
+            Id: newEmployee.Id,
+            Name:  newEmployee.Name,
+            Email: newEmployee.Email,
+            PhoneNumber: newEmployee.PhoneNumber,
+            Gender: Convert.ToInt16(newEmployee.Gender),
+            CafeId: newEmployee.CafeId
+        );
+        
+        return Results.CreatedAtRoute("GetEmployee", new {id = newEmployee.Id}, response);
     }
     catch(DbUpdateException ex)
     {
@@ -256,6 +264,7 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
     cafe.Description = request.Description;
     cafe.Location = request.Location;
     cafe.Logo = request.Logo;
+    cafe.UpdatedDate = DateTime.UtcNow;
 
     try
     {
@@ -297,6 +306,7 @@ app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbCon
     employee.PhoneNumber = request.PhoneNumber;
     employee.Gender = Convert.ToBoolean(request.Gender);
     employee.CafeId = newCafeId;
+    employee.UpdatedDate = DateTime.UtcNow;
 
     try
     {
