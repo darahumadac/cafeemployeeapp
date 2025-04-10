@@ -142,6 +142,7 @@ app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext) =>
         EmailAddress: employee.Email,
         PhoneNumber: employee.PhoneNumber,
         Gender: Convert.ToInt16(employee.Gender),
+        DaysWorked: employee.DaysWorked,
         AssignedCafeId: employee.CafeId
     );
 
@@ -185,6 +186,7 @@ app.MapPost("/employee", async (UpsertEmployeeRequest request, AppDbContext dbCo
         PhoneNumber = request.PhoneNumber,
         Gender = Convert.ToBoolean(request.Gender),
         CafeId = request.AssignedCafeId != null ? Guid.Parse(request.AssignedCafeId) : null,
+        StartDate = request.AssignedCafeId != null ? DateTime.UtcNow : null
     };
 
     dbContext.Employees.Add(newEmployee);
@@ -198,7 +200,8 @@ app.MapPost("/employee", async (UpsertEmployeeRequest request, AppDbContext dbCo
         email = newEmployee.Email,
         phoneNumber = newEmployee.PhoneNumber,
         gender = Convert.ToInt16(newEmployee.Gender),
-        cafeId = newEmployee.CafeId
+        cafeId = newEmployee.CafeId,
+        daysWorked = 0
     });
 
 
@@ -223,11 +226,20 @@ app.MapPut("/employee/{id}", async (string id, UpsertEmployeeRequest request, Ap
         return Results.ValidationProblem(validationResult.ToDictionary());
     }
 
+    Guid? newCafeId = request.AssignedCafeId != null ? Guid.Parse(request.AssignedCafeId) : null;
+    var currentCafeId = employee.CafeId;
+
+    //update start date only when changing assigned cafe
+    if(newCafeId != currentCafeId)
+    {
+        employee.StartDate = newCafeId != null ? DateTime.UtcNow :  null;
+    }
+    
     employee.Name = request.Name;
     employee.Email = request.EmailAddress;
     employee.PhoneNumber = request.PhoneNumber;
     employee.Gender = Convert.ToBoolean(request.Gender);
-    employee.CafeId = request.AssignedCafeId != null ? Guid.Parse(request.AssignedCafeId) : null;
+    employee.CafeId = newCafeId;
 
     await dbContext.SaveChangesAsync();
 
@@ -248,6 +260,12 @@ app.MapDelete("/cafe/{id}", async (string id, AppDbContext dbContext) =>
     if(cafe == null)
     {
         return Results.NotFound();
+    }
+
+    await dbContext.Entry(cafe).Collection(c => c.Employees).LoadAsync();
+    foreach(var employee in cafe.Employees)
+    {
+        employee.StartDate = null;
     }
 
     dbContext.Cafes.Remove(cafe);

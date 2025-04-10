@@ -38,11 +38,11 @@ public class UpsertEmployeeRequestValidator : AbstractValidator<UpsertEmployeeRe
         When(r => r.AssignedCafeId != null, () => {
             RuleFor(r => r.AssignedCafeId)
                 .Cascade(CascadeMode.Stop)
-                .NotEmpty()
+                .NotEmpty().WithMessage("'AssignedCafeId' must not be empty. Remove 'AssignedCafeId' from the request to remove assigned cafe")
                 .Must(cafeId => 
                     Guid.TryParse(cafeId, out Guid parsedCafeId) 
                     && dbContext.Cafes.Find(parsedCafeId) != null)
-                    .WithMessage("AssignedCafeId must be an existing cafe id");
+                    .WithMessage("'AssignedCafeId' must be an existing cafe id");
         });
     }
 }

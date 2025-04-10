@@ -5,4 +5,5 @@ public record ViewEmployeeResponse(
     string EmailAddress, 
     string PhoneNumber, 
     int Gender,
+    int DaysWorked, 
     Guid? AssignedCafeId);
