@@ -3,16 +3,16 @@ using FluentValidation;
 
 namespace CafeEmployeeApi.Contracts.Commands;
 
-public record UpsertEmployeeRequest(
+public record EmployeeRequest(
     string Name, 
     string EmailAddress, 
     string PhoneNumber, 
     int Gender, 
     string? AssignedCafeId);
 
-public class UpsertEmployeeRequestValidator : AbstractValidator<UpsertEmployeeRequest>
+public class EmployeeRequestValidator : AbstractValidator<EmployeeRequest>
 {
-    public UpsertEmployeeRequestValidator(AppDbContext dbContext)
+    public EmployeeRequestValidator(AppDbContext dbContext)
     {
         RuleFor(r => r.Name)
             .Cascade(CascadeMode.Stop)

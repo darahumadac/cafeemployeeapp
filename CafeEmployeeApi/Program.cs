@@ -18,9 +18,16 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(buil
 
 //TODO: add extension method for validators
 //TODO: add logging
+
+//TODO: trim all strings, html encode strings, normalize strings
+//TODO: add created date and updated date for records
+//TODO: add pk for cafe to prevent adding duplicate cafes
+//TODO: add pk for employee to prevent adding duplicate cafes
+//TODO: add etag and last modified headers for create and update request
+
 //Validation
-builder.Services.AddScoped<IValidator<CreateCafeRequest>, CreateCafeRequestValidator>();
-builder.Services.AddScoped<IValidator<UpsertEmployeeRequest>, UpsertEmployeeRequestValidator>();
+builder.Services.AddScoped<IValidator<CafeRequest>, CafeRequestValidator>();
+builder.Services.AddScoped<IValidator<EmployeeRequest>, EmployeeRequestValidator>();
 
 //for exception handling
 builder.Services.AddProblemDetails();
@@ -72,7 +79,7 @@ app.MapGet("/cafes", async (AppDbContext dbContext, [FromQuery] string? location
 app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe = null) =>
 {
     Guid cafeId = Guid.Empty;
-    var validGuid = cafe != null && cafe != string.Empty ? cafe.ToGuid(out cafeId) : true;
+    var validGuid = cafe != null && cafe != string.Empty ? cafe.TryToGuid(out cafeId) : true;
     if(!validGuid)
     {
         return Results.NotFound("Cafe not found");
@@ -101,7 +108,7 @@ app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe
 
 app.MapGet("/cafes/{id}", async (string id, AppDbContext dbContext) =>
 {
-    var validGuid = id.ToGuid(out Guid cafeId);
+    var validGuid = id.TryToGuid(out Guid cafeId);
     if(!validGuid)
     {
         return Results.NotFound();
@@ -150,7 +157,7 @@ app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext) =>
 
 }).WithName("GetEmployee");
 
-app.MapPost("/cafe", async (CreateCafeRequest request, AppDbContext dbContext, IValidator<CreateCafeRequest> validator) =>
+app.MapPost("/cafe", async (CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator) =>
 {
     var validationResult = await validator.ValidateAsync(request);
     if(!validationResult.IsValid)
@@ -173,7 +180,7 @@ app.MapPost("/cafe", async (CreateCafeRequest request, AppDbContext dbContext, I
 
 }).WithName("AddCafe");
 
-app.MapPost("/employee", async (UpsertEmployeeRequest request, AppDbContext dbContext, IValidator<UpsertEmployeeRequest> validator) =>
+app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator) =>
 {
     var validationResult = await validator.ValidateAsync(request);
     if(!validationResult.IsValid)
@@ -207,12 +214,39 @@ app.MapPost("/employee", async (UpsertEmployeeRequest request, AppDbContext dbCo
 
 }).WithName("AddEmployee");
 
-app.MapPut("/cafe/{id}", (string id, AppDbContext dbContext) =>
+app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator) =>
 {
+    var validGuid = id.TryToGuid(out Guid cafeId);
+    if(!validGuid)
+    {
+        return Results.NotFound();
+    }
+
+    var cafe = await dbContext.Cafes.FindAsync(cafeId);
+    if(cafe == null)
+    {
+        return Results.NotFound();
+    }
+    
+    var validationResult = await validator.ValidateAsync(request);
+    if(!validationResult.IsValid)
+    {
+        return Results.ValidationProblem(validationResult.ToDictionary());
+    }
+
+    cafe.Name = request.Name;
+    cafe.Description = request.Description;
+    cafe.Location = request.Location;
+    cafe.Logo = request.Logo;
+
+    await dbContext.SaveChangesAsync();
+    
+    return Results.Ok();
+
 
 }).WithName("UpdateCafe");
 
-app.MapPut("/employee/{id}", async (string id, UpsertEmployeeRequest request, AppDbContext dbContext, IValidator<UpsertEmployeeRequest> validator) =>
+app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator) =>
 {
     var employee = await dbContext.Employees.FindAsync(id);
     if(employee == null)
@@ -250,7 +284,7 @@ app.MapPut("/employee/{id}", async (string id, UpsertEmployeeRequest request, Ap
 
 app.MapDelete("/cafe/{id}", async (string id, AppDbContext dbContext) =>
 {   
-    var validGuid = id.ToGuid(out Guid cafeId);
+    var validGuid = id.TryToGuid(out Guid cafeId);
     if(!validGuid)
     {
         return Results.NotFound();

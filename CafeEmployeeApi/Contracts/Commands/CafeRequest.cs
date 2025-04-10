@@ -2,15 +2,15 @@ using FluentValidation;
 
 namespace CafeEmployeeApi.Contracts.Commands;
 
-public record CreateCafeRequest(
+public record CafeRequest(
     string Name, 
     string Description, 
     string Location, 
     byte[]? Logo = null);
 
-public class CreateCafeRequestValidator : AbstractValidator<CreateCafeRequest>
+public class CafeRequestValidator : AbstractValidator<CafeRequest>
 {
-    public CreateCafeRequestValidator()
+    public CafeRequestValidator()
     {
         RuleFor(r => r.Name)
             .Cascade(CascadeMode.Stop)
