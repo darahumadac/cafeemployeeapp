@@ -4,5 +4,5 @@ public record ViewEmployeeResponse(
     string Name, 
     string EmailAddress, 
     string PhoneNumber, 
-    bool Gender,
+    int Gender,
     Guid? AssignedCafeId);

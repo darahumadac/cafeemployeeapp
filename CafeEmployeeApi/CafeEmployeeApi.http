@@ -72,7 +72,7 @@ GET {{CafeEmployeeApi_HostAddress}}/employees?cafe=invalid
 Accept: application/json
 
 ###
-GET {{CafeEmployeeApi_HostAddress}}/employees/UISOEzKyKKeL1
+GET {{CafeEmployeeApi_HostAddress}}/employees/UI3iaAQZ8cXvY
 Accept: application/json
 
 ###
@@ -116,4 +116,17 @@ Accept: application/json
 ###
 DELETE {{CafeEmployeeApi_HostAddress}}/employee/UIl0pCoD49f8L
 Accept: application/json
+
+###
+PUT {{CafeEmployeeApi_HostAddress}}/employee/UI3iaAQZ8cXvY
+Content-Type: application/json
+Accept: application/json
+
+{
+    "name": "new one u",
+    "emailAddress": "dudududu@gmail.coms",
+    "phoneNumber": "88123458",
+    "gender": 1,
+    "assignedCafeId": "f3f38874-d98b-40a5-9637-ae0883adde08"
+}
 

@@ -20,7 +20,7 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(buil
 //TODO: add logging
 //Validation
 builder.Services.AddScoped<IValidator<CreateCafeRequest>, CreateCafeRequestValidator>();
-builder.Services.AddScoped<IValidator<CreateEmployeeRequest>, CreateEmployeeRequestValidator>();
+builder.Services.AddScoped<IValidator<UpsertEmployeeRequest>, UpsertEmployeeRequestValidator>();
 
 //for exception handling
 builder.Services.AddProblemDetails();
@@ -141,7 +141,7 @@ app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext) =>
         Name: employee.Name,
         EmailAddress: employee.Email,
         PhoneNumber: employee.PhoneNumber,
-        Gender: employee.Gender,
+        Gender: Convert.ToInt16(employee.Gender),
         AssignedCafeId: employee.CafeId
     );
 
@@ -172,7 +172,7 @@ app.MapPost("/cafe", async (CreateCafeRequest request, AppDbContext dbContext, I
 
 }).WithName("AddCafe");
 
-app.MapPost("/employee", async (CreateEmployeeRequest request, AppDbContext dbContext, IValidator<CreateEmployeeRequest> validator) =>
+app.MapPost("/employee", async (UpsertEmployeeRequest request, AppDbContext dbContext, IValidator<UpsertEmployeeRequest> validator) =>
 {
     var validationResult = await validator.ValidateAsync(request);
     if(!validationResult.IsValid)
@@ -209,8 +209,29 @@ app.MapPut("/cafe/{id}", (string id, AppDbContext dbContext) =>
 
 }).WithName("UpdateCafe");
 
-app.MapPut("/employees/{id}", (string id, AppDbContext dbContext) =>
+app.MapPut("/employee/{id}", async (string id, UpsertEmployeeRequest request, AppDbContext dbContext, IValidator<UpsertEmployeeRequest> validator) =>
 {
+    var employee = await dbContext.Employees.FindAsync(id);
+    if(employee == null)
+    {
+        return Results.NotFound();
+    }
+
+    var validationResult = await validator.ValidateAsync(request);
+    if(!validationResult.IsValid)
+    {
+        return Results.ValidationProblem(validationResult.ToDictionary());
+    }
+
+    employee.Name = request.Name;
+    employee.Email = request.EmailAddress;
+    employee.PhoneNumber = request.PhoneNumber;
+    employee.Gender = Convert.ToBoolean(request.Gender);
+    employee.CafeId = request.AssignedCafeId != null ? Guid.Parse(request.AssignedCafeId) : null;
+
+    await dbContext.SaveChangesAsync();
+
+    return Results.Ok();
 
 }).WithName("UpdateEmployee");
 
