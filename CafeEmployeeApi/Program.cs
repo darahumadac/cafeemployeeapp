@@ -1,4 +1,6 @@
 using CafeEmployeeApi.Contracts;
+using CafeEmployeeApi.Contracts.Commands;
+using CafeEmployeeApi.Contracts.Queries;
 using CafeEmployeeApi.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
