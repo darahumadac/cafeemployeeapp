@@ -16,16 +16,15 @@ builder.Services.AddOpenApi();
 //Database
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("AppDb")));
 
-//TODO: add extension method for validators
 //TODO: add logging
 
-//TODO: trim all strings, html encode strings, normalize strings
-//TODO: add etag and last modified headers for create and update request
+//TODO: add etag and last modified for post request 
+//TODO: add etag and last modified for put request
+//TODO: check last modified for get requests
 //TODO: cqrs
 
 //Validation
-builder.Services.AddScoped<IValidator<CafeRequest>, CafeRequestValidator>();
-builder.Services.AddScoped<IValidator<EmployeeRequest>, EmployeeRequestValidator>();
+builder.AddRequestValidators();
 
 //for exception handling
 builder.Services.AddProblemDetails();
@@ -109,7 +108,7 @@ app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe
 
 }).WithName("GetEmployees");
 
-app.MapGet("/cafes/{id}", async (string id, AppDbContext dbContext) =>
+app.MapGet("/cafes/{id}", async (string id, AppDbContext dbContext, HttpContext context) =>
 {
     var validGuid = id.TryToGuid(out Guid cafeId);
     if(!validGuid)
@@ -130,11 +129,12 @@ app.MapGet("/cafes/{id}", async (string id, AppDbContext dbContext) =>
         Logo: cafe.Logo
     );
 
+    context.Response.Headers.Append("Last-Modified", cafe.UpdatedDate.ToString("R"));
     return Results.Ok(response);
     
 }).WithName("GetCafe");
 
-app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext) =>
+app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext, HttpContext context) =>
 {
     var employee = await dbContext.Employees.FindAsync(id);
     if(employee == null)
@@ -155,6 +155,7 @@ app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext) =>
         DaysWorked: employee.DaysWorked,
         AssignedCafeId: employee.CafeId
     );
+    context.Response.Headers.Append("Last-Modified", employee.UpdatedDate.ToString("R"));
 
     return Results.Ok(response);
 
@@ -240,7 +241,7 @@ app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext,
 
 }).WithName("AddEmployee");
 
-app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator) =>
+app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator, HttpContext context) =>
 {
     var validGuid = id.TryToGuid(out Guid cafeId);
     if(!validGuid)
@@ -269,6 +270,7 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
     try
     {
         await dbContext.SaveChangesAsync();
+        context.Response.Headers.Append("Last-Modified", cafe.UpdatedDate.ToString("R"));
         return Results.Ok();
 
     }catch(DbUpdateException ex)
@@ -278,7 +280,7 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
 
 }).WithName("UpdateCafe");
 
-app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator) =>
+app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator, HttpContext context) =>
 {
     var employee = await dbContext.Employees.FindAsync(id);
     if(employee == null)
@@ -312,6 +314,7 @@ app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbCon
     try
     {
         await dbContext.SaveChangesAsync();
+        context.Response.Headers.Append("Last-Modified", employee.UpdatedDate.ToString("R"));
         return Results.Ok();
     }catch(DbUpdateException ex)
     {
