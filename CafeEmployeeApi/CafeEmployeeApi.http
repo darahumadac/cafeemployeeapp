@@ -30,7 +30,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "MyBestCafe",
+    "name": "DeleteThis",
     "description": "Created best cafe ever!!!",
     "location": "Singapore"
 }
@@ -44,6 +44,12 @@ Accept: application/json
     "description": "Created best cafe ever!!! Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!Created best cafe ever!!!",
     "location": ""
 }
+###
+DELETE  {{CafeEmployeeApi_HostAddress}}/cafe/d358840b-0053-4136-a8f8-1c30941fc21d
+Accept: application/json
+###
+GET  {{CafeEmployeeApi_HostAddress}}/cafes/d358840b-0053-4136-a8f8-1c30941fc21d
+Accept: application/json
 
 
 
@@ -57,13 +63,16 @@ Accept: application/json
 ###
 GET {{CafeEmployeeApi_HostAddress}}/employees?cafe=F3F38874-D98B-40A5-9637-AE0883ADDE08
 Accept: application/json
+###
+GET {{CafeEmployeeApi_HostAddress}}/employees?cafe=d358840b-0053-4136-a8f8-1c30941fc21d
+Accept: application/json
 
 ###
 GET {{CafeEmployeeApi_HostAddress}}/employees?cafe=invalid
 Accept: application/json
 
 ###
-GET {{CafeEmployeeApi_HostAddress}}/employees/UIcjebylfVAf4
+GET {{CafeEmployeeApi_HostAddress}}/employees/UISOEzKyKKeL1
 Accept: application/json
 
 ###
@@ -76,11 +85,11 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "Dudu four",
+    "name": "Dudu five",
     "emailAddress": "dudududu@gmail.com",
     "phoneNumber": "88123456",
     "gender": 1,
-    "assignedCafeId": "F3F38874-D98B-40A5-9637-AE0883ADDE08"
+    "assignedCafeId": "d358840b-0053-4136-a8f8-1c30941fc21d"
 }
 ###
 POST {{CafeEmployeeApi_HostAddress}}/employee

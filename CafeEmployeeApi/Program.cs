@@ -1,6 +1,7 @@
 using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Contracts.Queries;
 using CafeEmployeeApi.Database;
+using CafeEmployeeApi.Extensions;
 using CafeEmployeeApi.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
@@ -71,17 +72,14 @@ app.MapGet("/cafes", async (AppDbContext dbContext, [FromQuery] string? location
 app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe = null) =>
 {
     Guid cafeId = Guid.Empty;
-    if(!string.IsNullOrEmpty(cafe))
+    var validGuid = cafe != null && cafe != string.Empty ? cafe.ToGuid(out cafeId) : true;
+    if(!validGuid)
     {
-        var validGuid = Guid.TryParse(cafe, out cafeId);
-        if(!validGuid)
-        {
-            return Results.NotFound("Cafe not found");
-        }
+        return Results.NotFound("Cafe not found");
     }
-    
+
     var employees = await dbContext.Employees
-        .Where(e => string.IsNullOrEmpty(cafe) || e.CafeId == cafeId)
+        .Where(e => cafeId == Guid.Empty || e.CafeId == cafeId)
         .Include(e => e.AssignedCafe)
         .ToListAsync();
 
@@ -103,16 +101,12 @@ app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe
 
 app.MapGet("/cafes/{id}", async (string id, AppDbContext dbContext) =>
 {
-     Guid cafeId = Guid.Empty;
-    if(!string.IsNullOrEmpty(id))
+    var validGuid = id.ToGuid(out Guid cafeId);
+    if(!validGuid)
     {
-        var validGuid = Guid.TryParse(id, out cafeId);
-        if(!validGuid)
-        {
-            return Results.NotFound();
-        }
+        return Results.NotFound();
     }
-
+    
     var cafe = await dbContext.Cafes.FindAsync(cafeId);
     if(cafe == null)
     {
@@ -210,7 +204,7 @@ app.MapPost("/employee", async (CreateEmployeeRequest request, AppDbContext dbCo
 
 }).WithName("AddEmployee");
 
-app.MapPut("/cafe/{id}", (Guid id, AppDbContext dbContext) =>
+app.MapPut("/cafe/{id}", (string id, AppDbContext dbContext) =>
 {
 
 }).WithName("UpdateCafe");
@@ -220,8 +214,24 @@ app.MapPut("/employees/{id}", (string id, AppDbContext dbContext) =>
 
 }).WithName("UpdateEmployee");
 
-app.MapDelete("/cafe/{id}", (Guid id, AppDbContext dbContext) =>
-{
+
+app.MapDelete("/cafe/{id}", async (string id, AppDbContext dbContext) =>
+{   
+    var validGuid = id.ToGuid(out Guid cafeId);
+    if(!validGuid)
+    {
+        return Results.NotFound();
+    }
+
+    var cafe = await dbContext.Cafes.FindAsync(cafeId);
+    if(cafe == null)
+    {
+        return Results.NotFound();
+    }
+
+    dbContext.Remove(cafe);
+    await dbContext.SaveChangesAsync();
+    return Results.NoContent();
 
 }).WithName("DeleteCafe");
 
