@@ -24,6 +24,8 @@ app.UseHttpsRedirection();
 
 app.MapGet("/cafes", async (AppDbContext dbContext, [FromQuery] string? location = null) =>
 {
+    //TODO: implement mediator
+    // var result = await mediator.Send(new GetCafes(location));
     var cafes = await dbContext.Cafes
         .Where(c => string.IsNullOrEmpty(location) || c.Location == location)
         .Include(c => c.Employees)
@@ -53,7 +55,7 @@ app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe
         var validGuid = Guid.TryParse(cafe, out cafeId);
         if(!validGuid)
         {
-            return Results.Ok(new List<EmployeesResponse>());
+            return Results.NotFound("Cafe not found");
         }
     }
     
@@ -65,7 +67,7 @@ app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe
     var response = employees
         .OrderByDescending(e => e.DaysWorked)
         .ThenBy(e => e.Name)
-        .Select(e => new EmployeesResponse(
+        .Select(e => new GetEmployeesResponse(
             Id: e.Id,
             Name: e.Name,
             EmailAddress: e.Email,
@@ -78,13 +80,57 @@ app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe
 
 }).WithName("GetEmployees");
 
-app.MapGet("/cafes/{id}", (Guid id) =>
+app.MapGet("/cafes/{id}", async (string id, AppDbContext dbContext) =>
 {
+     Guid cafeId = Guid.Empty;
+    if(!string.IsNullOrEmpty(id))
+    {
+        var validGuid = Guid.TryParse(id, out cafeId);
+        if(!validGuid)
+        {
+            return Results.NotFound();
+        }
+    }
 
+    var cafe = await dbContext.Cafes.FindAsync(cafeId);
+    if(cafe == null)
+    {
+        return Results.NotFound();
+    }
+    var response = new ViewCafeResponse(
+        Name: cafe.Name,
+        Description: cafe.Description,
+        Location: cafe.Location,
+        Id: cafe.Id,
+        Logo: cafe.Logo
+    );
+
+    return Results.Ok(response);
+    
 }).WithName("GetCafe");
 
-app.MapGet("/employees/{id}", (string id) =>
+app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext) =>
 {
+    var employee = await dbContext.Employees.FindAsync(id);
+    if(employee == null)
+    {
+        return Results.NotFound();
+    }
+
+    await dbContext.Entry(employee)
+    .Reference(e => e.AssignedCafe)
+    .LoadAsync();
+
+    var response = new ViewEmployeeResponse(
+        Id: employee.Id,
+        Name: employee.Name,
+        EmailAddress: employee.Email,
+        PhoneNumber: employee.PhoneNumber,
+        Gender: employee.Gender,
+        AssignedCafeId: employee.CafeId
+    );
+
+    return Results.Ok(response);
 
 }).WithName("GetEmployee");
 

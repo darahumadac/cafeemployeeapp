@@ -16,6 +16,13 @@ Accept: application/json
 GET {{CafeEmployeeApi_HostAddress}}/cafes?location=invalid
 Accept: application/json
 
+###
+GET {{CafeEmployeeApi_HostAddress}}/cafes/F3F38874-D98B-40A5-9637-AE0883ADDE08
+Accept: application/json
+###
+
+GET {{CafeEmployeeApi_HostAddress}}/cafes/xxx
+Accept: application/json
 
 ### EMPLOYEES
 GET {{CafeEmployeeApi_HostAddress}}/employees
@@ -31,3 +38,12 @@ Accept: application/json
 ###
 GET {{CafeEmployeeApi_HostAddress}}/employees?cafe=invalid
 Accept: application/json
+
+###
+GET {{CafeEmployeeApi_HostAddress}}/employees/UIcjebylfVAf4
+Accept: application/json
+
+###
+GET {{CafeEmployeeApi_HostAddress}}/employees/xxx
+Accept: application/json
+
