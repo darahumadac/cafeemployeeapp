@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CafeEmployeeApi.Models;
 
 [Index(nameof(Name), nameof(Email), nameof(PhoneNumber), IsUnique = true)]
-public class Employee
+public class Employee : Auditable
 {
     //UIXXXXXXX -> X is alphanumeric
     public string Id { get; set; } = null!;

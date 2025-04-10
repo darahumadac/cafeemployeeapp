@@ -21,6 +21,26 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Employee>()
             .Property(e => e.Id)
             .HasValueGenerator<EmployeeIdGenerator>();
+
+        //set created and updated dates
+        modelBuilder.Entity<Cafe>()
+            .Property(c => c.CreatedDate)
+            .HasDefaultValueSql("GETUTCDATE()");
+
+        modelBuilder.Entity<Cafe>()
+            .Property(c => c.UpdatedDate)
+            .HasDefaultValueSql("GETUTCDATE()");
+            
+        modelBuilder.Entity<Employee>()
+            .Property(e => e.CreatedDate)
+            .HasDefaultValueSql("GETUTCDATE()");
+
+        modelBuilder.Entity<Employee>()
+            .Property(e => e.UpdatedDate)
+            .HasDefaultValueSql("GETUTCDATE()");
+
+        
+
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

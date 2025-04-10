@@ -21,8 +21,6 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(buil
 
 //TODO: trim all strings, html encode strings, normalize strings
 //TODO: add created date and updated date for records
-//TODO: add pk for cafe to prevent adding duplicate cafes
-//TODO: add pk for employee to prevent adding duplicate cafes
 //TODO: add etag and last modified headers for create and update request
 
 //Validation

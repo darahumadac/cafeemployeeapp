@@ -135,9 +135,9 @@ Accept: application/json
 {
     "name": "new startu",
     "emailAddress": "dudududu@gmail.coms",
-    "phoneNumber": "88123458",
+    "phoneNumber": "88123459",
     "gender": 1,
-    "assignedCafeId": "b13633e7-45ac-4cd9-8a28-1cd78725aec2"
+    "assignedCafeId": "ED13F4E7-51D1-4B89-82A3-2B7D085978F1"
     
 
 }

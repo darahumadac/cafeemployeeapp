@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CafeEmployeeApi.Models;
 
 [Index(nameof(Name), nameof(Location), IsUnique = true)]
-public class Cafe
+public class Cafe : Auditable
 {
     public Guid Id { get; set; }
     
