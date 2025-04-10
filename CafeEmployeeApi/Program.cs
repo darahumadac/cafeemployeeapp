@@ -229,14 +229,22 @@ app.MapDelete("/cafe/{id}", async (string id, AppDbContext dbContext) =>
         return Results.NotFound();
     }
 
-    dbContext.Remove(cafe);
+    dbContext.Cafes.Remove(cafe);
     await dbContext.SaveChangesAsync();
     return Results.NoContent();
 
 }).WithName("DeleteCafe");
 
-app.MapDelete("/employees/{id}", (string id, AppDbContext dbContext) =>
+app.MapDelete("/employee/{id}", async (string id, AppDbContext dbContext) =>
 {
+    var employee = await dbContext.Employees.FindAsync(id);
+    if(employee == null)
+    {
+        return Results.NotFound();
+    }
+    dbContext.Employees.Remove(employee);
+    await dbContext.SaveChangesAsync();
+    return Results.NoContent();
 
 }).WithName("DeleteEmployee");
 
