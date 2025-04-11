@@ -5,9 +5,11 @@ namespace CafeEmployeeApi.Extensions;
 
 public static class ValidationExtensions
 {
-    public static void AddRequestValidators(this WebApplicationBuilder builder)
+    public static IServiceCollection AddRequestValidators(this IServiceCollection services)
     {
-        builder.Services.AddScoped<IValidator<CafeRequest>, CafeRequestValidator>();
-        builder.Services.AddScoped<IValidator<EmployeeRequest>, EmployeeRequestValidator>();
+        services.AddScoped<IValidator<CafeRequest>, CafeRequestValidator>();
+        services.AddScoped<IValidator<EmployeeRequest>, EmployeeRequestValidator>();
+        
+        return services;
     }
 }

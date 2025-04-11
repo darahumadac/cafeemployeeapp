@@ -18,16 +18,17 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(buil
 
 //TODO: add logging
 
+//TODO: Refactor repetitive code, do cqrs
 //TODO: add etag and last modified for post request 
 //TODO: add etag and last modified for put request
-//TODO: check last modified for get requests
-//TODO: cqrs
 
 //Validation
-builder.AddRequestValidators();
+builder.Services.AddRequestValidators();
 
 //for exception handling
 builder.Services.AddProblemDetails();
+
+builder.Services.AddOutputCache(); //default expire: 60 sec
 
 var app = builder.Build();
 
@@ -35,8 +36,9 @@ var app = builder.Build();
 app.UseExceptionHandler(new ExceptionHandlerOptions
 {
     AllowStatusCode404Response = true,
-    StatusCodeSelector = ex => {
-        var statusCode =  ex switch
+    StatusCodeSelector = ex =>
+    {
+        var statusCode = ex switch
         {
             BadHttpRequestException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError
@@ -53,7 +55,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/cafes", async (AppDbContext dbContext, [FromQuery] string? location = null) =>
+//TODO: add cors here
+
+app.UseOutputCache();
+
+app.MapGet("/cafes", async (AppDbContext dbContext, HttpContext context, [FromQuery] string? location = null) =>
 {
     //TODO: implement mediator
     // var result = await mediator.Send(new GetCafes(location));
@@ -73,18 +79,21 @@ app.MapGet("/cafes", async (AppDbContext dbContext, [FromQuery] string? location
         Logo: c.Logo
     ));
 
+    context.Response.Headers.LastModified = cafes.Max(c => c.UpdatedDate).ToString("R");
+
     return Results.Ok(response);
 
-}).WithName("GetCafes");
+}).WithName("GetCafes")
+.CacheOutput();
 
 
-app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe = null) =>
+app.MapGet("/employees", async (AppDbContext dbContext, HttpContext context, [FromQuery] string? cafe = null) =>
 {
     Guid cafeId = Guid.Empty;
     var validGuid = cafe != null && cafe != string.Empty ? cafe.TryToGuid(out cafeId) : true;
-    if(!validGuid)
+    if (!validGuid)
     {
-        return Results.NotFound("Cafe not found");
+        return Results.NotFound();
     }
 
     var employees = await dbContext.Employees
@@ -104,20 +113,23 @@ app.MapGet("/employees", async (AppDbContext dbContext, [FromQuery] string? cafe
             Cafe: e.AssignedCafe?.Name ?? string.Empty
         ));
 
+    context.Response.Headers.LastModified = employees.Max(c => c.UpdatedDate).ToString("R");
+
     return Results.Ok(response);
 
-}).WithName("GetEmployees");
+}).WithName("GetEmployees")
+.CacheOutput();
 
 app.MapGet("/cafes/{id}", async (string id, AppDbContext dbContext, HttpContext context) =>
 {
     var validGuid = id.TryToGuid(out Guid cafeId);
-    if(!validGuid)
+    if (!validGuid)
     {
         return Results.NotFound();
     }
-    
+
     var cafe = await dbContext.Cafes.FindAsync(cafeId);
-    if(cafe == null)
+    if (cafe == null)
     {
         return Results.NotFound();
     }
@@ -128,16 +140,16 @@ app.MapGet("/cafes/{id}", async (string id, AppDbContext dbContext, HttpContext 
         Id: cafe.Id,
         Logo: cafe.Logo
     );
-
-    context.Response.Headers.Append("Last-Modified", cafe.UpdatedDate.ToString("R"));
+    context.Response.Headers.LastModified = cafe.UpdatedDate.ToString("R");
     return Results.Ok(response);
-    
-}).WithName("GetCafe");
+
+}).WithName("GetCafe")
+.CacheOutput();
 
 app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext, HttpContext context) =>
 {
     var employee = await dbContext.Employees.FindAsync(id);
-    if(employee == null)
+    if (employee == null)
     {
         return Results.NotFound();
     }
@@ -155,21 +167,24 @@ app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext, HttpCont
         DaysWorked: employee.DaysWorked,
         AssignedCafeId: employee.CafeId
     );
-    context.Response.Headers.Append("Last-Modified", employee.UpdatedDate.ToString("R"));
+
+    context.Response.Headers.LastModified = employee.UpdatedDate.ToString("R");
 
     return Results.Ok(response);
 
-}).WithName("GetEmployee");
+}).WithName("GetEmployee")
+.CacheOutput();
 
 app.MapPost("/cafe", async (CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator) =>
 {
     var validationResult = await validator.ValidateAsync(request);
-    if(!validationResult.IsValid)
+    if (!validationResult.IsValid)
     {
         return Results.ValidationProblem(validationResult.ToDictionary());
     }
-    
-    var newCafe = new Cafe{
+
+    var newCafe = new Cafe
+    {
         Name = request.Name,
         Description = request.Description,
         Location = request.Location,
@@ -187,26 +202,29 @@ app.MapPost("/cafe", async (CafeRequest request, AppDbContext dbContext, IValida
             Location: newCafe.Location,
             Logo: newCafe.Logo
         );
-        return Results.CreatedAtRoute("GetCafe", new {id = newCafe.Id.ToString()}, response);
 
-    }catch(DbUpdateException ex)
+        return Results.CreatedAtRoute("GetCafe", new { id = newCafe.Id.ToString() }, response);
+
+    }
+    catch (DbUpdateException ex)
     {
         //TODO: add logging
         return Results.Problem(detail: "The cafe already exists in the location", statusCode: 409);
     }
 
-    
+
 
 }).WithName("AddCafe");
 
 app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator) =>
 {
     var validationResult = await validator.ValidateAsync(request);
-    if(!validationResult.IsValid)
+    if (!validationResult.IsValid)
     {
         return Results.ValidationProblem(validationResult.ToDictionary());
     }
-    var newEmployee = new Employee{
+    var newEmployee = new Employee
+    {
         Name = request.Name,
         Email = request.EmailAddress,
         PhoneNumber = request.PhoneNumber,
@@ -223,40 +241,38 @@ app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext,
 
         var response = new CreateEmployeeResponse(
             Id: newEmployee.Id,
-            Name:  newEmployee.Name,
+            Name: newEmployee.Name,
             Email: newEmployee.Email,
             PhoneNumber: newEmployee.PhoneNumber,
             Gender: Convert.ToInt16(newEmployee.Gender),
             CafeId: newEmployee.CafeId
         );
-        
-        return Results.CreatedAtRoute("GetEmployee", new {id = newEmployee.Id}, response);
+
+        return Results.CreatedAtRoute("GetEmployee", new { id = newEmployee.Id }, response);
     }
-    catch(DbUpdateException ex)
+    catch (DbUpdateException ex)
     {
         return Results.Problem(detail: "The employee already exists", statusCode: 409);
     }
-    
-
 
 }).WithName("AddEmployee");
 
 app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator, HttpContext context) =>
 {
     var validGuid = id.TryToGuid(out Guid cafeId);
-    if(!validGuid)
+    if (!validGuid)
     {
         return Results.NotFound();
     }
 
     var cafe = await dbContext.Cafes.FindAsync(cafeId);
-    if(cafe == null)
+    if (cafe == null)
     {
         return Results.NotFound();
     }
-    
+
     var validationResult = await validator.ValidateAsync(request);
-    if(!validationResult.IsValid)
+    if (!validationResult.IsValid)
     {
         return Results.ValidationProblem(validationResult.ToDictionary());
     }
@@ -270,10 +286,11 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
     try
     {
         await dbContext.SaveChangesAsync();
-        context.Response.Headers.Append("Last-Modified", cafe.UpdatedDate.ToString("R"));
+        context.Response.Headers.LastModified = cafe.UpdatedDate.ToString("R");
         return Results.Ok();
 
-    }catch(DbUpdateException ex)
+    }
+    catch (DbUpdateException ex)
     {
         return Results.Problem(detail: "The cafe already exists in the location", statusCode: 409);
     }
@@ -283,13 +300,13 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
 app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator, HttpContext context) =>
 {
     var employee = await dbContext.Employees.FindAsync(id);
-    if(employee == null)
+    if (employee == null)
     {
         return Results.NotFound();
     }
 
     var validationResult = await validator.ValidateAsync(request);
-    if(!validationResult.IsValid)
+    if (!validationResult.IsValid)
     {
         return Results.ValidationProblem(validationResult.ToDictionary());
     }
@@ -298,12 +315,12 @@ app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbCon
     var currentCafeId = employee.CafeId;
 
     //update start date only when changing assigned cafe
-    var now =  DateTime.UtcNow;
-    if(newCafeId != currentCafeId)
+    var now = DateTime.UtcNow;
+    if (newCafeId != currentCafeId)
     {
-        employee.StartDate = newCafeId != null ? now :  null;
+        employee.StartDate = newCafeId != null ? now : null;
     }
-    
+
     employee.Name = request.Name;
     employee.Email = request.EmailAddress;
     employee.PhoneNumber = request.PhoneNumber;
@@ -314,34 +331,35 @@ app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbCon
     try
     {
         await dbContext.SaveChangesAsync();
-        context.Response.Headers.Append("Last-Modified", employee.UpdatedDate.ToString("R"));
+        context.Response.Headers.LastModified = employee.UpdatedDate.ToString("R");
         return Results.Ok();
-    }catch(DbUpdateException ex)
+    }
+    catch (DbUpdateException ex)
     {
         return Results.Problem(detail: "The employee already exists", statusCode: 409);
     }
 
-    
+
 
 }).WithName("UpdateEmployee");
 
 
 app.MapDelete("/cafe/{id}", async (string id, AppDbContext dbContext) =>
-{   
+{
     var validGuid = id.TryToGuid(out Guid cafeId);
-    if(!validGuid)
+    if (!validGuid)
     {
         return Results.NotFound();
     }
 
     var cafe = await dbContext.Cafes.FindAsync(cafeId);
-    if(cafe == null)
+    if (cafe == null)
     {
         return Results.NotFound();
     }
 
     await dbContext.Entry(cafe).Collection(c => c.Employees).LoadAsync();
-    foreach(var employee in cafe.Employees)
+    foreach (var employee in cafe.Employees)
     {
         employee.StartDate = null;
     }
@@ -355,7 +373,7 @@ app.MapDelete("/cafe/{id}", async (string id, AppDbContext dbContext) =>
 app.MapDelete("/employee/{id}", async (string id, AppDbContext dbContext) =>
 {
     var employee = await dbContext.Employees.FindAsync(id);
-    if(employee == null)
+    if (employee == null)
     {
         return Results.NotFound();
     }
