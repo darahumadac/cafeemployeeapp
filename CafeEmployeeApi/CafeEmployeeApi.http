@@ -24,7 +24,7 @@ GET {{CafeEmployeeApi_HostAddress}}/cafes?location=invalid
 Accept: application/json
 
 ###
-GET {{CafeEmployeeApi_HostAddress}}/cafes/5C0BB65C-6311-4842-B7B6-15AF1F277043
+GET {{CafeEmployeeApi_HostAddress}}/cafes/5c0bb65c-6311-4842-b7b6-15af1f277043
 Accept: application/json
 ###
 
@@ -66,12 +66,12 @@ If-Modified-Since: Thu, 10 Apr 2025 16:04:25 GMT
 PUT {{CafeEmployeeApi_HostAddress}}/cafe/5c0bb65c-6311-4842-b7b6-15af1f277043
 Content-Type: application/json
 Accept: application/json
-If-Match: AAAAAAAAB9M=
+If-Match: AAAAAAAAVf0=
 
 {
-    "name": "CafeNew1Up",
-    "description": "updated desc3",
-    "location": "Singapore"
+    "name": "Cafe 1",
+    "description": "Best cafe in town - 1",
+    "location": "US"
 }
 
 
