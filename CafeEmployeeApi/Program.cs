@@ -15,12 +15,10 @@ builder.Services.AddOpenApi();
 
 //Database
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("AppDb")));
-
 //TODO: add logging
 
 //TODO: Refactor repetitive code, do cqrs
-//TODO: add etag and last modified for post request 
-//TODO: add etag and last modified for put request
+//TODO: differentiate db exception with timeout exception for db
 
 //Validation
 builder.Services.AddRequestValidators();
@@ -140,6 +138,7 @@ app.MapGet("/cafes/{id}", async (string id, AppDbContext dbContext, HttpContext 
         Id: cafe.Id,
         Logo: cafe.Logo
     );
+    context.Response.Headers.ETag = Convert.ToBase64String(cafe.ETag);
     context.Response.Headers.LastModified = cafe.UpdatedDate.ToString("R");
     return Results.Ok(response);
 
@@ -168,6 +167,7 @@ app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext, HttpCont
         AssignedCafeId: employee.CafeId
     );
 
+    context.Response.Headers.ETag = Convert.ToBase64String(employee.ETag);
     context.Response.Headers.LastModified = employee.UpdatedDate.ToString("R");
 
     return Results.Ok(response);
@@ -175,7 +175,7 @@ app.MapGet("/employees/{id}", async (string id, AppDbContext dbContext, HttpCont
 }).WithName("GetEmployee")
 .CacheOutput();
 
-app.MapPost("/cafe", async (CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator) =>
+app.MapPost("/cafe", async (CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator, HttpContext context) =>
 {
     var validationResult = await validator.ValidateAsync(request);
     if (!validationResult.IsValid)
@@ -203,6 +203,8 @@ app.MapPost("/cafe", async (CafeRequest request, AppDbContext dbContext, IValida
             Logo: newCafe.Logo
         );
 
+        context.Response.Headers.ETag = Convert.ToBase64String(newCafe.ETag);
+        
         return Results.CreatedAtRoute("GetCafe", new { id = newCafe.Id.ToString() }, response);
 
     }
@@ -216,7 +218,7 @@ app.MapPost("/cafe", async (CafeRequest request, AppDbContext dbContext, IValida
 
 }).WithName("AddCafe");
 
-app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator) =>
+app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator, HttpContext context) =>
 {
     var validationResult = await validator.ValidateAsync(request);
     if (!validationResult.IsValid)
@@ -248,6 +250,8 @@ app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext,
             CafeId: newEmployee.CafeId
         );
 
+        context.Response.Headers.ETag = Convert.ToBase64String(newEmployee.ETag);
+
         return Results.CreatedAtRoute("GetEmployee", new { id = newEmployee.Id }, response);
     }
     catch (DbUpdateException ex)
@@ -259,6 +263,11 @@ app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext,
 
 app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator, HttpContext context) =>
 {
+    if(string.IsNullOrEmpty(context.Request.Headers.IfMatch))
+    {
+        return Results.Problem(detail: "Missing If-Match header.", statusCode: StatusCodes.Status428PreconditionRequired);
+    }
+
     var validGuid = id.TryToGuid(out Guid cafeId);
     if (!validGuid)
     {
@@ -271,12 +280,17 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
         return Results.NotFound();
     }
 
+    if(Convert.ToBase64String(cafe.ETag) != context.Request.Headers.IfMatch)
+    {
+        return Results.StatusCode(StatusCodes.Status412PreconditionFailed);
+    }
+
     var validationResult = await validator.ValidateAsync(request);
     if (!validationResult.IsValid)
     {
         return Results.ValidationProblem(validationResult.ToDictionary());
     }
-
+    
     cafe.Name = request.Name;
     cafe.Description = request.Description;
     cafe.Location = request.Location;
@@ -286,6 +300,7 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
     try
     {
         await dbContext.SaveChangesAsync();
+        context.Response.Headers.ETag = Convert.ToBase64String(cafe.ETag);
         context.Response.Headers.LastModified = cafe.UpdatedDate.ToString("R");
         return Results.Ok();
 
@@ -299,10 +314,20 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
 
 app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator, HttpContext context) =>
 {
+    if(string.IsNullOrEmpty(context.Request.Headers.IfMatch))
+    {
+        return Results.Problem(detail: "Missing If-Match header.", statusCode: StatusCodes.Status428PreconditionRequired);
+    }
+
     var employee = await dbContext.Employees.FindAsync(id);
     if (employee == null)
     {
         return Results.NotFound();
+    }
+
+    if(Convert.ToBase64String(employee.ETag) != context.Request.Headers.IfMatch)
+    {
+         return Results.StatusCode(StatusCodes.Status412PreconditionFailed);
     }
 
     var validationResult = await validator.ValidateAsync(request);
@@ -331,6 +356,7 @@ app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbCon
     try
     {
         await dbContext.SaveChangesAsync();
+        context.Response.Headers.ETag = Convert.ToBase64String(employee.ETag);
         context.Response.Headers.LastModified = employee.UpdatedDate.ToString("R");
         return Results.Ok();
     }

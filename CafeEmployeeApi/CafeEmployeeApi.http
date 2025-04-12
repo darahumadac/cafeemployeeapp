@@ -24,7 +24,7 @@ GET {{CafeEmployeeApi_HostAddress}}/cafes?location=invalid
 Accept: application/json
 
 ###
-GET {{CafeEmployeeApi_HostAddress}}/cafes/9ddea15d-a385-406f-9afc-4ba1d38458dd
+GET {{CafeEmployeeApi_HostAddress}}/cafes/5C0BB65C-6311-4842-B7B6-15AF1F277043
 Accept: application/json
 ###
 
@@ -37,7 +37,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "CafeNew10",
+    "name": "CafeNew1",
     "description": "Created best cafe ever!!!",
     "location": "Philippines"
 }
@@ -63,13 +63,14 @@ Accept: application/json
 If-Modified-Since: Thu, 10 Apr 2025 16:04:25 GMT
 
 ###
-PUT {{CafeEmployeeApi_HostAddress}}/cafe/9ddea15d-a385-406f-9afc-4ba1d38458dd
+PUT {{CafeEmployeeApi_HostAddress}}/cafe/5c0bb65c-6311-4842-b7b6-15af1f277043
 Content-Type: application/json
 Accept: application/json
+If-Match: AAAAAAAAB9M=
 
 {
-    "name": "Cafe 1",
-    "description": "updated desc",
+    "name": "CafeNew1Up",
+    "description": "updated desc3",
     "location": "Singapore"
 }
 
@@ -144,16 +145,16 @@ DELETE {{CafeEmployeeApi_HostAddress}}/employee/UIl0pCoD49f8L
 Accept: application/json
 
 ###
-PUT {{CafeEmployeeApi_HostAddress}}/employee/UIXwUdQJncNpL
+PUT {{CafeEmployeeApi_HostAddress}}/employee/UIzHHPGNcfCXX
 Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "darahu",
+    "name": "empnew2",
     "emailAddress": "dudududu@gmail.coms",
     "phoneNumber": "88123459",
     "gender": 1,
-    "assignedCafeId": "DE15717D-F7AF-466E-886E-F485C0A712F9"
+    "assignedCafeId": "75743BE9-3170-4F8C-91BF-8CAC09561EB7"
     
 
 }

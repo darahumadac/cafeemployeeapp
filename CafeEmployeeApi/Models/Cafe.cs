@@ -42,6 +42,7 @@ public class Cafe : Auditable
         }
     }
 
+    //NOTE: Ideally, should be a path to an external store
     public byte[]? Logo { get; set; }
 
     [Required]

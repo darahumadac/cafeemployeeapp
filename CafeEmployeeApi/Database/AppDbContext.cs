@@ -39,6 +39,14 @@ public class AppDbContext : DbContext
             .Property(e => e.UpdatedDate)
             .HasDefaultValueSql("GETUTCDATE()");
 
+        //etag generator
+        modelBuilder.Entity<Cafe>()
+            .Property(c => c.ETag)
+            .IsRowVersion();
+
+        modelBuilder.Entity<Employee>()
+            .Property(e => e.ETag)
+            .IsRowVersion();
         
 
     }
@@ -61,7 +69,7 @@ public class AppDbContext : DbContext
                     });
                 cafes.AddRange(addCafes);
                 dbContext.SaveChanges();
-            }
+            }            
 
             //seed employees
             var employees = dbContext.Set<Employee>();
