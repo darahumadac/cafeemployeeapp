@@ -25,7 +25,7 @@ Accept: application/json
 If-Modified-Since: Sat, 12 Apr 2025 09:05:23 GMT
 
 ###
-GET {{CafeEmployeeApi_HostAddress}}/cafes/5c0bb65c-6311-4842-b7b6-15af1f277043
+GET {{CafeEmployeeApi_HostAddress}}/cafes/23058923-a46e-41fe-838c-9cc823a00ac9
 Accept: application/json
 ###
 
@@ -40,7 +40,7 @@ Accept: application/json
 {
     "name": "CafeNewDel",
     "description": "Created best cafe ever!!!",
-    "location": "Manila"
+    "location": "Japan"
 }
 ###
 POST {{CafeEmployeeApi_HostAddress}}/cafe
@@ -53,7 +53,7 @@ Accept: application/json
     "location": ""
 }
 ###
-DELETE  {{CafeEmployeeApi_HostAddress}}/cafe/9f5e4b72-13f4-4897-8b33-fbcefdc7d5f4
+DELETE  {{CafeEmployeeApi_HostAddress}}/cafe/23058923-a46e-41fe-838c-9cc823a00ac9
 Accept: application/json
 ### hAS ISSUE
 GET  {{CafeEmployeeApi_HostAddress}}/cafes/5C0BB65C-6311-4842-B7B6-15AF1F277043

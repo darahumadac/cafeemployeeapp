@@ -1,6 +1,5 @@
-using CafeEmployeeApi.Database;
 using CafeEmployeeApi.Extensions;
-using CafeEmployeeApi.Models;
+using CafeEmployeeApi.Services;
 using MediatR;
 
 namespace CafeEmployeeApi.Contracts.Commands;

@@ -2,6 +2,7 @@ using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Database;
 using CafeEmployeeApi.Extensions;
 using CafeEmployeeApi.Models;
+using CafeEmployeeApi.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
