@@ -204,7 +204,7 @@ app.MapPost("/cafe", async (CafeRequest request, AppDbContext dbContext, IValida
         );
 
         context.Response.Headers.ETag = Convert.ToBase64String(newCafe.ETag);
-        
+
         return Results.CreatedAtRoute("GetCafe", new { id = newCafe.Id.ToString() }, response);
 
     }
@@ -263,7 +263,7 @@ app.MapPost("/employee", async (EmployeeRequest request, AppDbContext dbContext,
 
 app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator, HttpContext context) =>
 {
-    if(string.IsNullOrEmpty(context.Request.Headers.IfMatch))
+    if (string.IsNullOrEmpty(context.Request.Headers.IfMatch))
     {
         return Results.Problem(detail: "Missing If-Match header.", statusCode: StatusCodes.Status428PreconditionRequired);
     }
@@ -280,7 +280,7 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
         return Results.NotFound();
     }
 
-    if(Convert.ToBase64String(cafe.ETag) != context.Request.Headers.IfMatch)
+    if (Convert.ToBase64String(cafe.ETag) != context.Request.Headers.IfMatch)
     {
         return Results.StatusCode(StatusCodes.Status412PreconditionFailed);
     }
@@ -290,13 +290,11 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
     {
         return Results.ValidationProblem(validationResult.ToDictionary());
     }
-    
     cafe.Name = request.Name;
     cafe.Description = request.Description;
     cafe.Location = request.Location;
     cafe.Logo = request.Logo;
     cafe.UpdatedDate = DateTime.UtcNow;
-
     try
     {
         await dbContext.SaveChangesAsync();
@@ -314,7 +312,7 @@ app.MapPut("/cafe/{id}", async (string id, CafeRequest request, AppDbContext dbC
 
 app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator, HttpContext context) =>
 {
-    if(string.IsNullOrEmpty(context.Request.Headers.IfMatch))
+    if (string.IsNullOrEmpty(context.Request.Headers.IfMatch))
     {
         return Results.Problem(detail: "Missing If-Match header.", statusCode: StatusCodes.Status428PreconditionRequired);
     }
@@ -325,9 +323,9 @@ app.MapPut("/employee/{id}", async (string id, EmployeeRequest request, AppDbCon
         return Results.NotFound();
     }
 
-    if(Convert.ToBase64String(employee.ETag) != context.Request.Headers.IfMatch)
+    if (Convert.ToBase64String(employee.ETag) != context.Request.Headers.IfMatch)
     {
-         return Results.StatusCode(StatusCodes.Status412PreconditionFailed);
+        return Results.StatusCode(StatusCodes.Status412PreconditionFailed);
     }
 
     var validationResult = await validator.ValidateAsync(request);
