@@ -38,9 +38,9 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "CafeNew2",
+    "name": "CafeNewDel",
     "description": "Created best cafe ever!!!",
-    "location": "Australia"
+    "location": "Manila"
 }
 ###
 POST {{CafeEmployeeApi_HostAddress}}/cafe
@@ -53,7 +53,7 @@ Accept: application/json
     "location": ""
 }
 ###
-DELETE  {{CafeEmployeeApi_HostAddress}}/cafe/bef17309-3880-4218-9554-aef9fc932246
+DELETE  {{CafeEmployeeApi_HostAddress}}/cafe/9f5e4b72-13f4-4897-8b33-fbcefdc7d5f4
 Accept: application/json
 ### hAS ISSUE
 GET  {{CafeEmployeeApi_HostAddress}}/cafes/5C0BB65C-6311-4842-B7B6-15AF1F277043
@@ -116,11 +116,11 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "new start",
+    "name": "newemp",
     "emailAddress": "dudududu@gmail.com",
     "phoneNumber": "88123456",
     "gender": 1,
-    "assignedCafeId": "f3f38874-d98b-40a5-9637-ae0883adde08"
+    "assignedCafeId": "5dc823f9-47c4-47aa-8654-f26956c37488"
 }
 ###
 POST {{CafeEmployeeApi_HostAddress}}/employee
@@ -128,10 +128,11 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "EmpNew",
+    "name": "EmpDel2",
     "emailAddress": "employee1@cafe.com",
     "phoneNumber": "82345672",
-    "gender": 0
+    "gender": 0,
+    "assignedCafeId": "2A388857-9226-4529-B005-AD8A2E34B44A"
 }
 ###
 POST {{CafeEmployeeApi_HostAddress}}/employee
@@ -145,7 +146,7 @@ Accept: application/json
 }
 
 ###
-DELETE {{CafeEmployeeApi_HostAddress}}/employee/UISsgx18zLFNu
+DELETE {{CafeEmployeeApi_HostAddress}}/employee/UINQUfoAcZX02
 Accept: application/json
 
 ###

@@ -1,8 +1,10 @@
+using CafeEmployeeApi.Contracts;
 using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Contracts.Queries;
 using CafeEmployeeApi.Database;
 using CafeEmployeeApi.Models;
 using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -70,46 +72,24 @@ public static partial class EndpointExtensions
 
     }
 
-    private static async Task<IResult> AddEmployeeAsync(EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator, HttpContext context)
+    private static async Task<IResult> AddEmployeeAsync(IMediator mediator, EmployeeRequest request, IValidator<EmployeeRequest> validator, HttpContext context)
     {
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
             return Results.ValidationProblem(validationResult.ToDictionary());
         }
-        var newEmployee = new Employee
+
+        Result<CreateEmployeeResponse> result = await mediator.Send(request);
+        if(!result.IsSuccess)
         {
-            Name = request.Name,
-            Email = request.EmailAddress,
-            PhoneNumber = request.PhoneNumber,
-            Gender = Convert.ToBoolean(request.Gender),
-            CafeId = request.AssignedCafeId != null ? Guid.Parse(request.AssignedCafeId) : null,
-            StartDate = request.AssignedCafeId != null ? DateTime.UtcNow : null
-        };
-
-        try
-        {
-            dbContext.Employees.Add(newEmployee);
-
-            await dbContext.SaveChangesAsync();
-
-            var response = new CreateEmployeeResponse(
-                Id: newEmployee.Id,
-                Name: newEmployee.Name,
-                Email: newEmployee.Email,
-                PhoneNumber: newEmployee.PhoneNumber,
-                Gender: Convert.ToInt16(newEmployee.Gender),
-                CafeId: newEmployee.CafeId
-            );
-
-            context.Response.Headers.ETag = Convert.ToBase64String(newEmployee.ETag);
-
-            return Results.CreatedAtRoute("GetEmployee", new { id = newEmployee.Id }, response);
+            return Results.Problem(detail: result.Error, statusCode: 409);
         }
-        catch (DbUpdateException ex)
-        {
-            return Results.Problem(detail: "The employee already exists", statusCode: 409);
-        }
+        
+        var response = result.Value!;
+        context.Response.Headers.ETag = response.ETag;
+
+        return Results.CreatedAtRoute("GetEmployee", new { id = response.Id }, response);
 
     }
 
@@ -168,19 +148,14 @@ public static partial class EndpointExtensions
 
     }
 
-    private static async Task<IResult> DeleteEmployeeAsync(string id, AppDbContext dbContext)
+    private static async Task<IResult> DeleteEmployeeAsync(IMediator mediator, string id)
     {
-        var employee = await dbContext.Employees.FindAsync(id);
-        if (employee == null)
+        var ok = await mediator.Send(new DeleteEmployeeRequest(id));
+        if(!ok)
         {
             return Results.NotFound();
         }
-        
-        dbContext.Employees.Remove(employee);
-        await dbContext.SaveChangesAsync();
         return Results.NoContent();
-
     }
-
 
 }

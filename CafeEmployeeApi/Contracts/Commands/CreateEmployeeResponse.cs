@@ -6,4 +6,5 @@ public record CreateEmployeeResponse(
     string Email, 
     string PhoneNumber, 
     int Gender,
+    string ETag,
     Guid? CafeId);

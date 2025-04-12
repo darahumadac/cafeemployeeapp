@@ -1,8 +1,10 @@
+using CafeEmployeeApi.Contracts;
 using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Contracts.Queries;
 using CafeEmployeeApi.Database;
 using CafeEmployeeApi.Models;
 using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -60,7 +62,7 @@ public static partial class EndpointExtensions
         return Results.Ok(response);
     }
 
-    private static async Task<IResult> AddCafeAsync(CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator, HttpContext context)
+    private static async Task<IResult> AddCafeAsync(IMediator mediator, CafeRequest request, IValidator<CafeRequest> validator, HttpContext context)
     {
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
@@ -68,36 +70,16 @@ public static partial class EndpointExtensions
             return Results.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var newCafe = new Cafe
+        Result<CreateCafeResponse> result = await mediator.Send(request);
+        if(!result.IsSuccess)
         {
-            Name = request.Name,
-            Description = request.Description,
-            Location = request.Location,
-            Logo = request.Logo
-        };
-
-        try
-        {
-            dbContext.Cafes.Add(newCafe);
-            await dbContext.SaveChangesAsync();
-            var response = new CreateCafeResponse(
-                Id: newCafe.Id,
-                Name: newCafe.Name,
-                Description: newCafe.Description,
-                Location: newCafe.Location,
-                Logo: newCafe.Logo
-            );
-
-            context.Response.Headers.ETag = Convert.ToBase64String(newCafe.ETag);
-
-            return Results.CreatedAtRoute("GetCafe", new { id = newCafe.Id.ToString() }, response);
-
+            return Results.Problem(detail: result.Error, statusCode: 409);
         }
-        catch (DbUpdateException ex)
-        {
-            //TODO: add logging
-            return Results.Problem(detail: "The cafe already exists in the location", statusCode: 409);
-        }
+
+        var response = result.Value!;
+        context.Response.Headers.ETag = response.ETag;
+
+        return Results.CreatedAtRoute("GetCafe", new { id = response.Id.ToString() }, response);
     }
 
     private static async Task<IResult> UpdateCafeAsync(string id, CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator, HttpContext context)
@@ -149,29 +131,14 @@ public static partial class EndpointExtensions
 
     }
 
-    private static async Task<IResult> DeleteCafeAsync(string id, AppDbContext dbContext)
+    private static async Task<IResult> DeleteCafeAsync(IMediator mediator, string id)
     {
-        var validGuid = id.TryToGuid(out Guid cafeId);
-        if (!validGuid)
+        var ok = await mediator.Send(new DeleteCafeRequest(id));
+        if(!ok)
         {
             return Results.NotFound();
         }
 
-        var cafe = await dbContext.Cafes.FindAsync(cafeId);
-        if (cafe == null)
-        {
-            return Results.NotFound();
-        }
-
-        await dbContext.Entry(cafe).Collection(c => c.Employees).LoadAsync();
-        foreach (var employee in cafe.Employees)
-        {
-            employee.StartDate = null;
-        }
-
-        dbContext.Cafes.Remove(cafe);
-        await dbContext.SaveChangesAsync();
         return Results.NoContent();
-
     }
 }

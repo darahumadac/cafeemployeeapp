@@ -1,5 +1,7 @@
+using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Database;
 using CafeEmployeeApi.Extensions;
+using CafeEmployeeApi.Models;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +15,16 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(buil
 //TODO: add logging
 
 //TODO: Refactor repetitive code, do cqrs
+
+builder.Services.AddScoped<IDeleteService<string>, EmployeeDeleteService>();
+builder.Services.AddScoped<IDeleteService<Guid>, CafeDeleteService>();
+builder.Services.AddScoped<IAddService<Cafe, CreateCafeResponse>, AddCafeService>();
+builder.Services.AddScoped<IAddService<Employee, CreateEmployeeResponse>, AddEmployeeService>();
+builder.Services.AddMediatR(cfg => 
+{
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+});
+
 //TODO: differentiate db exception with timeout exception for db
 
 //Validation

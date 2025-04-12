@@ -5,4 +5,5 @@ public record CreateCafeResponse(
     string Name, 
     string Description, 
     string Location, 
+    string ETag,
     byte[]? Logo = null);

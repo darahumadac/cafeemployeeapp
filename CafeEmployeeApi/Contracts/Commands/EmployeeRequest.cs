@@ -1,6 +1,9 @@
 using System.Text.RegularExpressions;
 using CafeEmployeeApi.Database;
+using CafeEmployeeApi.Extensions;
+using CafeEmployeeApi.Models;
 using FluentValidation;
+using MediatR;
 
 namespace CafeEmployeeApi.Contracts.Commands;
 
@@ -9,7 +12,7 @@ public record EmployeeRequest(
     string EmailAddress, 
     string PhoneNumber, 
     int Gender, 
-    string? AssignedCafeId);
+    string? AssignedCafeId) : IRequest<Result<CreateEmployeeResponse>>;
 
 public class EmployeeRequestValidator : AbstractValidator<EmployeeRequest>
 {
@@ -45,5 +48,41 @@ public class EmployeeRequestValidator : AbstractValidator<EmployeeRequest>
                     && dbContext.Cafes.Find(parsedCafeId) != null)
                     .WithMessage("'AssignedCafeId' must be an existing cafe id");
         });
+    }
+}
+
+public class CreateEmployeeRequestHandler : IRequestHandler<EmployeeRequest, Result<CreateEmployeeResponse>>
+{
+    private readonly IAddService<Employee, CreateEmployeeResponse> _addService;
+    public CreateEmployeeRequestHandler(IAddService<Employee, CreateEmployeeResponse> addService)
+    {
+        _addService = addService;
+    }
+    public async Task<Result<CreateEmployeeResponse>> Handle(EmployeeRequest request, CancellationToken cancellationToken)
+    {
+        var createEmployee = () =>
+            new Employee
+            {
+                Name = request.Name,
+                Email = request.EmailAddress,
+                PhoneNumber = request.PhoneNumber,
+                Gender = Convert.ToBoolean(request.Gender),
+                CafeId = request.AssignedCafeId != null ? Guid.Parse(request.AssignedCafeId) : null,
+                StartDate = request.AssignedCafeId != null ? DateTime.UtcNow : null
+            };
+
+        var createResponse = (Employee newEmployee) =>
+            new CreateEmployeeResponse(
+                Id: newEmployee.Id,
+                Name: newEmployee.Name,
+                Email: newEmployee.Email,
+                PhoneNumber: newEmployee.PhoneNumber,
+                Gender: Convert.ToInt16(newEmployee.Gender),
+                ETag: Convert.ToBase64String(newEmployee.ETag),
+                CafeId: newEmployee.CafeId
+            );
+
+
+        return await _addService.AddAsync(createEmployee, createResponse);
     }
 }
