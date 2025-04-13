@@ -15,12 +15,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("AppDb")));
 //TODO: add logging
 
-//TODO: Refactor repetitive code, do cqrs
-
-builder.Services.AddScoped<IDeleteService<string>, EmployeeDeleteService>();
-builder.Services.AddScoped<IDeleteService<Guid>, CafeDeleteService>();
-builder.Services.AddScoped<IAddService<Cafe, CreateCafeResponse>, AddService<Cafe, CreateCafeResponse>>();
-builder.Services.AddScoped<IAddService<Employee, CreateEmployeeResponse>, AddService<Employee, CreateEmployeeResponse>>();
+builder.Services.AddCrudServices();
 builder.Services.AddMediatR(cfg => 
 {
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
