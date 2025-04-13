@@ -4,11 +4,8 @@ import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
 import './App.css'
-import CafesPage from './pages/CafesPage';
-import EditCafePage from './pages/EditCafePage';
-import EditEmployeePage from './pages/EditEmployeePage';
-import AddCafePage from './pages/AddCafePage';
-import AddEmployeePage from './pages/AddEmployeePage';
+import ListPage from './pages/ListPage';
+import FormPage from './pages/FormPage';
 
 function App() {
   // Register all Community features
@@ -25,11 +22,14 @@ function App() {
       </AppBar>
 
       <Routes>
-          <Route path="/" element={<CafesPage />} />
-          <Route path="/cafes/add" element={<AddCafePage />} />
-          <Route path="/employees/add" element={<AddEmployeePage />} />
-          <Route path="/cafes/edit/:id" element={<EditCafePage />} />
-          <Route path="/employees/edit/:id" element={<EditEmployeePage />} />
+          <Route path="/cafes" index element={<ListPage />} />
+          <Route path="/employees" index element={<ListPage />} />
+
+          <Route path="/cafes/:id" element={<FormPage title="Edit Cafe" populate/>} />
+          <Route path="/employees/:id" element={<FormPage title="Edit Employee" populate/>} />
+
+          <Route path="/cafe" element={<FormPage title="Add Cafe" />} />
+          <Route path="/employee" element={<FormPage title="Add Employee"/>} />
       </Routes>
 
     </Router>

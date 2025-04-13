@@ -8,11 +8,12 @@ public static partial class EndpointExtensions
 
         cafes.MapGet("/", GetCafesAsync)
             .WithName("GetCafes")
-            .CacheOutput();
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromSeconds(3)));
+            
 
         cafes.MapGet("/{id}", GetCafeAsync)
             .WithName("GetCafe")
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromSeconds(10)));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromSeconds(5)));
 
 
         var cafeEndpoints  = endpoints.MapGroup("/cafe");
@@ -33,11 +34,11 @@ public static partial class EndpointExtensions
 
         employees.MapGet("/", GetEmployeesAsync)
             .WithName("GetEmployees")
-            .CacheOutput();
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromSeconds(3)));
 
         employees.MapGet("/{id}", GetEmployeeAsync)
             .WithName("GetEmployee")
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromSeconds(10)));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromSeconds(5)));
 
         var employee = endpoints.MapGroup("/employee");
 

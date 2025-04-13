@@ -69,6 +69,7 @@ public static partial class EndpointExtensions
 
         var response = result.Value!;
         context.Response.Headers.ETag = response.ETag;
+        context.Response.Headers.LastModified = DateTime.UtcNow.ToString("R");
 
         return Results.CreatedAtRoute("GetCafe", new { id = response.Id.ToString() }, response);
     }
@@ -111,7 +112,7 @@ public static partial class EndpointExtensions
 
     }
 
-    private static async Task<IResult> DeleteCafeAsync(IMediator mediator, string id)
+    private static async Task<IResult> DeleteCafeAsync(IMediator mediator, string id, HttpContext context)
     {
         var result = await mediator.Send(new DeleteCafeRequest(id));
         if(!result.IsValid)
@@ -123,6 +124,8 @@ public static partial class EndpointExtensions
         {
             return Results.NotFound();
         }
+
+        context.Response.Headers.LastModified = DateTime.UtcNow.ToString("R");
       
         return Results.NoContent();
     }

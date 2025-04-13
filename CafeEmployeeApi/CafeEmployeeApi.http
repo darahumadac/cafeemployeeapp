@@ -38,7 +38,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "CafeNewDel",
+    "name": "CafeNewD13",
     "description": "Created best cafe ever!!!",
     "location": "South Korea"
 }
@@ -53,7 +53,7 @@ Accept: application/json
     "location": ""
 }
 ###
-DELETE  {{CafeEmployeeApi_HostAddress}}/cafe/848A7DF4-904B-4F7F-9709-A9FEC9BA9798
+DELETE  {{CafeEmployeeApi_HostAddress}}/cafe/2a388857-9226-4529-b005-ad8a2e34b44a
 Accept: application/json
 ### hAS ISSUE
 GET  {{CafeEmployeeApi_HostAddress}}/cafes/CC9439C6-783D-4FD1-963A-71D10317580A

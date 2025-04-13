@@ -130,13 +130,14 @@ public static partial class EndpointExtensions
 
     }
 
-    private static async Task<IResult> DeleteEmployeeAsync(IMediator mediator, string id)
+    private static async Task<IResult> DeleteEmployeeAsync(IMediator mediator, string id, HttpContext context)
     {
         var ok = await mediator.Send(new DeleteEmployeeRequest(id));
         if(!ok)
         {
             return Results.NotFound();
         }
+        context.Response.Headers.LastModified = DateTime.UtcNow.ToString("R");
         return Results.NoContent();
     }
 

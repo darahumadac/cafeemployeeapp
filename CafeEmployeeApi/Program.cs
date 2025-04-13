@@ -32,7 +32,8 @@ builder.Services.AddCors(options =>
     {
         policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
             .WithMethods("POST", "GET", "PUT", "DELETE")
-            .WithHeaders("Content-Type", "Accept", "If-Match", "ETag", "If-Modified-Since");
+            .AllowAnyHeader();
+            // .WithHeaders("Content-Type", "Accept", "If-Match", "ETag", "If-Modified-Since");
     });
 });
 
