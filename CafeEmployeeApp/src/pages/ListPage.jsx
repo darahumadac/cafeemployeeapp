@@ -19,6 +19,8 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ConfirmModal from "../ConfirmModal.jsx";
 import SearchBar from "../SearchBar.jsx";
+import Dropdown from "../Dropdown.jsx";
+
 
 const ListPage = () => {
   const [rows, setRows] = useState([]);
@@ -91,6 +93,7 @@ const ListPage = () => {
   };
 
   const { pathname } = useLocation();
+  const entityName = pathname.slice(1, -1);
   const [loading, setLoading] = useState(true);
   const [reload, setReload] = useState(true);
   const [lastModified, setLastModified] = useState("");
@@ -108,7 +111,11 @@ const ListPage = () => {
       {/* <ConfirmModal open={confirmDeleteOpen} /> */}
       <Paper>
         <Button onClick={onRefreshClick}>Refresh</Button>
-        <SearchBar toSearch={pathname.slice(1, -1)}/>
+        <SearchBar toSearch={entityName} />
+        {entityName == "cafe" && <Dropdown label={"Location"} items={rows.map(item => item.location)}/> }
+        <Button to={`/${entityName}`} component={Link}>
+          Add {entityName}
+        </Button>
         <TableContainer>
           <Table>
             <TableHead>
@@ -124,13 +131,17 @@ const ListPage = () => {
                 <TableRow key={row.id}>
                   {columns.map((c) => (
                     <TableCell key={c.field}>
-                      {c.field == "employees" && 
-                        <Link to={{
-                          pathname: "/employees",
-                          search: `?cafe=${row.id}`
-                        }}>{row[c.field]}</Link> 
-                        || row[c.field] }
-                      
+                      {(c.field == "employees" && (
+                        <Link
+                          to={{
+                            pathname: "/employees",
+                            search: `?cafe=${row.id}`,
+                          }}
+                        >
+                          {row[c.field]}
+                        </Link>
+                      )) ||
+                        row[c.field]}
                     </TableCell>
                   ))}
                   <TableCell>
