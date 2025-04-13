@@ -4,6 +4,7 @@ using CafeEmployeeApi.Models;
 using CafeEmployeeApi.Services;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CafeEmployeeApi.Contracts.Commands;
 
@@ -86,3 +87,78 @@ public class CreateEmployeeRequestHandler : IRequestHandler<EmployeeRequest, Res
         return await _addService.AddAsync();
     }
 }
+
+
+public record UpdateEmployeeRequest : EmployeeRequest, IRequest<Result<Employee>>
+{
+    public UpdateEmployeeRequest(
+        string Id, 
+        string Name, 
+        string EmailAddress, 
+        string PhoneNumber, 
+        int Gender, 
+        string ETag, 
+        string? AssignedCafeId) : base(Name, EmailAddress, PhoneNumber, Gender, AssignedCafeId)
+    {
+        this.Id = Id;
+        this.ETag = ETag;
+    }
+
+    public string Id { get; private set; }
+    public string ETag { get; private set; }
+}
+
+public class UpdateEmployeeRequestHandler : IRequestHandler<UpdateEmployeeRequest, Result<Employee>>
+{
+    private readonly AppDbContext _dbContext;
+
+    public UpdateEmployeeRequestHandler(AppDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+    public async Task<Result<Employee>> Handle(UpdateEmployeeRequest request, CancellationToken cancellationToken)
+    {
+        var employee = await _dbContext.Employees.FindAsync(request.Id);
+        if (employee == null)
+        {
+            return Result<Employee>.Failure(StatusCodes.Status404NotFound.ToString());
+        }
+
+        if (Convert.ToBase64String(employee.ETag) != request.ETag)
+        {
+            return Result<Employee>.Failure(StatusCodes.Status412PreconditionFailed.ToString());
+        }
+
+        Guid? newCafeId = request.AssignedCafeId != null ? Guid.Parse(request.AssignedCafeId) : null;
+        var currentCafeId = employee.CafeId;
+
+        //update start date only when changing assigned cafe
+        var now = DateTime.UtcNow;
+        if (newCafeId != currentCafeId)
+        {
+            employee.StartDate = newCafeId != null ? now : null;
+        }
+
+        employee.Name = request.Name;
+        employee.Email = request.EmailAddress;
+        employee.PhoneNumber = request.PhoneNumber;
+        employee.Gender = Convert.ToBoolean(request.Gender);
+        employee.CafeId = newCafeId;
+        employee.UpdatedDate = now;
+
+        try
+        {
+            await _dbContext.SaveChangesAsync();
+            return Result<Employee>.Success(employee);
+        }
+        catch (DbUpdateException ex)
+        {
+            return Result<Employee>.Failure(ex.Message);
+        }
+
+
+    }
+}
+
+
+

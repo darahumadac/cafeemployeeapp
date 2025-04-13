@@ -20,6 +20,7 @@ public static class ServicesExtensions
         services.AddScoped<IValidator<GetEmployeesRequest>, GuidValidator>();
         services.AddScoped<IValidator<UpdateCafeRequest>, UpdateCafeIdValidator>();
         services.AddScoped<IValidator<UpdateCafeRequest>, CafeRequestValidator>();
+        services.AddScoped<IValidator<UpdateEmployeeRequest>, EmployeeRequestValidator>();
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         

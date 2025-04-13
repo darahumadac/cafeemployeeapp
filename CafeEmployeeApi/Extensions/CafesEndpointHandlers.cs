@@ -5,7 +5,6 @@ using CafeEmployeeApi.Database;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CafeEmployeeApi.Extensions;
 
@@ -74,7 +73,7 @@ public static partial class EndpointExtensions
         return Results.CreatedAtRoute("GetCafe", new { id = response.Id.ToString() }, response);
     }
 
-    private static async Task<IResult> UpdateCafeAsync(IMediator mediator, string id, CreateCafeRequest request, AppDbContext dbContext, IValidator<CreateCafeRequest> validator, HttpContext context)
+    private static async Task<IResult> UpdateCafeAsync(IMediator mediator, string id, CreateCafeRequest request, HttpContext context)
     {
         var updateRequest = new UpdateCafeRequest(
             id, 

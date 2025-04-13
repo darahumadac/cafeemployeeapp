@@ -3,7 +3,7 @@
 ### CAFES
 GET {{CafeEmployeeApi_HostAddress}}/cafes
 Accept: application/json
-If-Modified-Since: Sat, 12 Apr 2025 07:55:02 GMT
+If-Modified-Since: Sat, 12 Apr 2025 18:49:04 GMT
 ###
 GET {{CafeEmployeeApi_HostAddress}}/cafes?location=
 Accept: application/json
@@ -11,7 +11,7 @@ If-Modified-Since: Fri, 11 Apr 2025 05:35:50 GMT
 ###
 GET {{CafeEmployeeApi_HostAddress}}/cafes?location=Singapore
 Accept: application/json
-If-Modified-Since: Fri, 11 Apr 2025 05:35:50 GMT
+If-Modified-Since: Fri, 11 Apr 2025 08:14:58 GMT
 ###
 GET {{CafeEmployeeApi_HostAddress}}/cafes?location=Philippines
 Accept: application/json
@@ -25,7 +25,7 @@ Accept: application/json
 If-Modified-Since: Sat, 12 Apr 2025 09:05:23 GMT
 
 ###
-GET {{CafeEmployeeApi_HostAddress}}/cafes/23058923-a46e-41fe-838c-9cc823a00ac9
+GET {{CafeEmployeeApi_HostAddress}}/cafes/CC9439C6-783D-4FD1-963A-71D10317580A
 Accept: application/json
 ###
 
@@ -53,27 +53,27 @@ Accept: application/json
     "location": ""
 }
 ###
-DELETE  {{CafeEmployeeApi_HostAddress}}/cafe/23058923-a46e-41fe-838c-9cc823a00ac9
+DELETE  {{CafeEmployeeApi_HostAddress}}/cafe/848A7DF4-904B-4F7F-9709-A9FEC9BA9798
 Accept: application/json
 ### hAS ISSUE
-GET  {{CafeEmployeeApi_HostAddress}}/cafes/5C0BB65C-6311-4842-B7B6-15AF1F277043
+GET  {{CafeEmployeeApi_HostAddress}}/cafes/CC9439C6-783D-4FD1-963A-71D10317580A
 Accept: application/json
-If-Modified-Since: Sat, 12 Apr 2025 07:55:02 GMT
+If-Modified-Since: Sun, 13 Apr 2025 08:37:04 GMT
 
 ###
-GET  {{CafeEmployeeApi_HostAddress}}/cafes/5397E134-111F-4B6B-ADE1-8FE4720711A9
+GET  {{CafeEmployeeApi_HostAddress}}/cafes/75F4EE5B-2906-4323-9B11-3071059C7575
 Accept: application/json
 
 
 ###
-PUT {{CafeEmployeeApi_HostAddress}}/cafe/5c0bb65c-6311-4842-b7b6-15af1f277043
+PUT {{CafeEmployeeApi_HostAddress}}/cafe/75F4EE5B-2906-4323-9B11-3071059C7575
 Content-Type: application/json
 Accept: application/json
-If-Match: AAAAAAAAVgI=
+If-Match: AAAAAAAAVjM=
 
 {
-    "name": "CafeNew2",
-    "description": "Best cafe in town - 1",
+    "name": "Cafe 4",
+    "description": "Best cafe in town - 5",
     "location": "US"
 }
 
@@ -102,7 +102,7 @@ Accept: application/json
 GET {{CafeEmployeeApi_HostAddress}}/employees/UImKCcFpN5i7f
 Accept: application/json
 ###
-GET {{CafeEmployeeApi_HostAddress}}/employees/UIiC0E5Syqmhk
+GET {{CafeEmployeeApi_HostAddress}}/employees/UImKCcFpN5i7f
 Accept: application/json
 If-Modified-Since: Thu, 10 Apr 2025 16:57:45 GMT
 
@@ -128,7 +128,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "EmpDel3",
+    "name": "EmpDel4",
     "emailAddress": "employee1@cafe.com",
     "phoneNumber": "82345672",
     "gender": 0,
@@ -153,13 +153,14 @@ Accept: application/json
 PUT {{CafeEmployeeApi_HostAddress}}/employee/UImKCcFpN5i7f
 Content-Type: application/json
 Accept: application/json
-If-Match: AAAAAAAAB9s=
+If-Match: AAAAAAAApBY=
 
 {
-    "name": "Employee5U",
+    "name": "Employee5u",
     "emailAddress": "dudududu@gmail.coms",
-    "phoneNumber": "88123459",
-    "gender": 1
+    "phoneNumber": "88123458",
+    "gender": 1,
+    "assignedCafeId": "2A388857-9226-4529-B005-AD8A2E34B44A"
     
 
 }

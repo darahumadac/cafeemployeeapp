@@ -12,7 +12,7 @@ namespace CafeEmployeeApi.Extensions;
 
 public static partial class EndpointExtensions
 {
-    private static async Task<IResult> GetEmployeesAsync(IMediator mediator, AppDbContext dbContext, HttpContext context, [FromQuery] string? cafe = null)
+    private static async Task<IResult> GetEmployeesAsync(IMediator mediator, HttpContext context, [FromQuery] string? cafe = null)
     {
         var result = await mediator.Send(new GetEmployeesRequest(Cafe: cafe));
         if(!result.IsValid)
@@ -89,53 +89,44 @@ public static partial class EndpointExtensions
 
     }
 
-    private static async Task<IResult> UpdateEmployeeAsync(string id, EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator, HttpContext context)
+    private static async Task<IResult> UpdateEmployeeAsync(IMediator mediator, string id, EmployeeRequest request, HttpContext context)
     {
-        var employee = await dbContext.Employees.FindAsync(id);
-        if (employee == null)
+
+        var updateRequest = new UpdateEmployeeRequest(
+            id, 
+            request.Name, 
+            request.EmailAddress, 
+            request.PhoneNumber, 
+            request.Gender,
+            context.Request.Headers.IfMatch!, 
+            request.AssignedCafeId);
+
+        
+        var result = await mediator.Send<Result<Employee>>(updateRequest);
+        if(!result.IsValid)
         {
-            return Results.NotFound();
+            return Results.ValidationProblem(result.ValidationErrors!);
         }
 
-        if (Convert.ToBase64String(employee.ETag) != context.Request.Headers.IfMatch)
+        if(!result.IsSuccess)
         {
-            return Results.StatusCode(StatusCodes.Status412PreconditionFailed);
-        }
+            if(result.Error == StatusCodes.Status404NotFound.ToString())
+            {
+                return Results.NotFound();
+            }
+            else if(result.Error == StatusCodes.Status412PreconditionFailed.ToString())
+            {
+                return Results.StatusCode(StatusCodes.Status412PreconditionFailed);
+            }
 
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(validationResult.ToDictionary());
-        }
-
-        Guid? newCafeId = request.AssignedCafeId != null ? Guid.Parse(request.AssignedCafeId) : null;
-        var currentCafeId = employee.CafeId;
-
-        //update start date only when changing assigned cafe
-        var now = DateTime.UtcNow;
-        if (newCafeId != currentCafeId)
-        {
-            employee.StartDate = newCafeId != null ? now : null;
-        }
-
-        employee.Name = request.Name;
-        employee.Email = request.EmailAddress;
-        employee.PhoneNumber = request.PhoneNumber;
-        employee.Gender = Convert.ToBoolean(request.Gender);
-        employee.CafeId = newCafeId;
-        employee.UpdatedDate = now;
-
-        try
-        {
-            await dbContext.SaveChangesAsync();
-            context.Response.Headers.ETag = Convert.ToBase64String(employee.ETag);
-            context.Response.Headers.LastModified = employee.UpdatedDate.ToString("R");
-            return Results.Ok();
-        }
-        catch (DbUpdateException ex)
-        {
             return Results.Problem(detail: "The employee already exists", statusCode: 409);
         }
+
+        var employee = result.Value!;
+        context.Response.Headers.ETag = Convert.ToBase64String(employee.ETag);
+        context.Response.Headers.LastModified = employee.UpdatedDate.ToString("R");
+        
+        return Results.Ok();
 
     }
 

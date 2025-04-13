@@ -37,7 +37,7 @@ public static partial class EndpointExtensions
 
         employees.MapGet("/{id}", GetEmployeeAsync)
             .WithName("GetEmployee")
-            .CacheOutput();
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromSeconds(10)));
 
         var employee = endpoints.MapGroup("/employee");
 
