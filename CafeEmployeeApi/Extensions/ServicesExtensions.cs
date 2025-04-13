@@ -1,5 +1,6 @@
 using CafeEmployeeApi.Contracts;
 using CafeEmployeeApi.Contracts.Commands;
+using CafeEmployeeApi.Contracts.Queries;
 using CafeEmployeeApi.Models;
 using CafeEmployeeApi.Services;
 using FluentValidation;
@@ -13,8 +14,11 @@ public static class ServicesExtensions
     {
         services.AddScoped<IValidator<CafeRequest>, CafeRequestValidator>();
         services.AddScoped<IValidator<EmployeeRequest>, EmployeeRequestValidator>();
-        services.AddScoped<IValidator<DeleteCafeRequest>, NoValidation<DeleteCafeRequest>>();
+        services.AddScoped<IValidator<DeleteCafeRequest>, GuidValidator>();
         services.AddScoped<IValidator<DeleteEmployeeRequest>, NoValidation<DeleteEmployeeRequest>>();
+        services.AddScoped<IValidator<GetCafesRequest>, NoValidation<GetCafesRequest>>();
+        services.AddScoped<IValidator<GetEmployeesRequest>, GuidValidator>();
+
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         
         return services;

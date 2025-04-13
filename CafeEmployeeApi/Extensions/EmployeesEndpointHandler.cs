@@ -12,20 +12,15 @@ namespace CafeEmployeeApi.Extensions;
 
 public static partial class EndpointExtensions
 {
-    private static async Task<IResult> GetEmployeesAsync(AppDbContext dbContext, HttpContext context, [FromQuery] string? cafe = null)
+    private static async Task<IResult> GetEmployeesAsync(IMediator mediator, AppDbContext dbContext, HttpContext context, [FromQuery] string? cafe = null)
     {
-        Guid cafeId = Guid.Empty;
-        var validGuid = cafe != null && cafe != string.Empty ? cafe.TryToGuid(out cafeId) : true;
-        if (!validGuid)
+        var result = await mediator.Send(new GetEmployeesRequest(Cafe: cafe));
+        if(!result.IsValid)
         {
-            return Results.NotFound();
+            return Results.ValidationProblem(result.ValidationErrors!);
         }
 
-        var employees = await dbContext.Employees
-            .Where(e => cafeId == Guid.Empty || e.CafeId == cafeId)
-            .Include(e => e.AssignedCafe)
-            .ToListAsync();
-
+        var employees = result.Value!;
         var response = employees
             .OrderByDescending(e => e.DaysWorked)
             .ThenBy(e => e.Name)
@@ -38,7 +33,9 @@ public static partial class EndpointExtensions
                 Cafe: e.AssignedCafe?.Name ?? string.Empty
             ));
 
-        context.Response.Headers.LastModified = employees.Count > 0 ? employees.Max(c => c.UpdatedDate).ToString("R") : DateTime.UtcNow.ToString("R");
+        context.Response.Headers.LastModified = employees.Count() > 0 ?
+             employees.Max(c => c.UpdatedDate).ToString("R") 
+             : DateTime.UtcNow.ToString("R");
 
         return Results.Ok(response);
     }

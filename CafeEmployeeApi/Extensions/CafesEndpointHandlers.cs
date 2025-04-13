@@ -11,17 +11,9 @@ namespace CafeEmployeeApi.Extensions;
 
 public static partial class EndpointExtensions
 {
-    private static async Task<IResult> GetCafesAsync(AppDbContext dbContext, HttpContext context, [FromQuery] string? location = null)
+    private static async Task<IResult> GetCafesAsync(IMediator mediator, HttpContext context, [FromQuery] string? location = null)
     {
-        //TODO: implement mediator
-        // var result = await mediator.Send(new GetCafes(location));
-        var cafes = await dbContext.Cafes
-            .Where(c => string.IsNullOrEmpty(location) || c.Location == location)
-            .Include(c => c.Employees)
-            .OrderByDescending(c => c.Employees.Count)
-            .ThenBy(c => c.Name)
-            .ToListAsync();
-
+        var cafes = await mediator.Send(new GetCafesRequest(location));
         var response = cafes.Select(c => new GetCafesResponse(
             Name: c.Name,
             Description: c.Description,
@@ -30,8 +22,10 @@ public static partial class EndpointExtensions
             Id: c.Id,
             Logo: c.Logo
         ));
-
-        context.Response.Headers.LastModified = cafes.Count > 0 ? cafes.Max(c => c.UpdatedDate).ToString("R") : DateTime.UtcNow.ToString("R");
+    
+        context.Response.Headers.LastModified = cafes.Count() > 0 ?
+             cafes.Max(c => c.UpdatedDate).ToString("R") 
+             : DateTime.UtcNow.ToString("R");
 
         return Results.Ok(response);
     }
@@ -126,12 +120,17 @@ public static partial class EndpointExtensions
 
     private static async Task<IResult> DeleteCafeAsync(IMediator mediator, string id)
     {
-        var ok = await mediator.Send(new DeleteCafeRequest(id));
-        if(!ok)
+        var result = await mediator.Send(new DeleteCafeRequest(id));
+        if(!result.IsValid)
+        {
+            return Results.ValidationProblem(result.ValidationErrors!);
+        }
+        
+        if(!result.Value)
         {
             return Results.NotFound();
         }
-
+      
         return Results.NoContent();
     }
 }

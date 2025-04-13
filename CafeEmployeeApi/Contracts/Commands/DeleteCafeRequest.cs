@@ -4,8 +4,17 @@ using MediatR;
 
 namespace CafeEmployeeApi.Contracts.Commands;
 
-public record DeleteCafeRequest(string Id) : IRequest<bool>;
-public class DeleteCafeRequestHandler : IRequestHandler<DeleteCafeRequest, bool>
+public record DeleteCafeRequest : GuidRequest, IRequest<Result<bool>>
+{
+    public DeleteCafeRequest(string Id) : base(Id)
+    {
+        this.Id = Id;
+    }
+
+    public string Id { get; private set; }
+}
+
+public class DeleteCafeRequestHandler : IRequestHandler<DeleteCafeRequest, Result<bool>>
 {
     private readonly IDeleteService<Guid> _cafeDeleteService;
 
@@ -14,15 +23,10 @@ public class DeleteCafeRequestHandler : IRequestHandler<DeleteCafeRequest, bool>
         _cafeDeleteService = deleteService;
     }
 
-    public async Task<bool> Handle(DeleteCafeRequest request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(DeleteCafeRequest request, CancellationToken cancellationToken)
     {
-        var validGuid = request.Id.TryToGuid(out Guid cafeId);
-        if (!validGuid)
-        {
-            return false;
-        }
-
-        return await _cafeDeleteService.DeleteAsync(cafeId);
+        request.Id.TryToGuid(out Guid cafeId);
+        return Result<bool>.Success(await _cafeDeleteService.DeleteAsync(cafeId));
     }
 }
 
