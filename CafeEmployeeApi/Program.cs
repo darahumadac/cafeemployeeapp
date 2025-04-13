@@ -26,6 +26,16 @@ builder.Services.AddRequestValidators();
 //for exception handling
 builder.Services.AddProblemDetails();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
+            .WithMethods("POST", "GET", "PUT", "DELETE")
+            .WithHeaders("Content-Type", "Accept", "If-Match", "ETag", "If-Modified-Since");
+    });
+});
+
 builder.Services.AddOutputCache(); //default expire: 60 sec
 
 var app = builder.Build();
@@ -54,6 +64,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 //TODO: add cors here
+app.UseCors();
 
 app.UseOutputCache();
 
