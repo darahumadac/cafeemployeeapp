@@ -74,13 +74,12 @@ public static partial class EndpointExtensions
 
     private static async Task<IResult> AddEmployeeAsync(IMediator mediator, EmployeeRequest request, IValidator<EmployeeRequest> validator, HttpContext context)
     {
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(validationResult.ToDictionary());
-        }
-
         Result<CreateEmployeeResponse> result = await mediator.Send(request);
+        if(!result.IsValid)
+        {
+            return Results.ValidationProblem(result.ValidationErrors!);
+        }
+        
         if(!result.IsSuccess)
         {
             return Results.Problem(detail: "The employee already exists", statusCode: 409);

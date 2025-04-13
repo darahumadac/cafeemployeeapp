@@ -63,13 +63,12 @@ public static partial class EndpointExtensions
 
     private static async Task<IResult> AddCafeAsync(IMediator mediator, CafeRequest request, IValidator<CafeRequest> validator, HttpContext context)
     {
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(validationResult.ToDictionary());
-        }
-
         Result<CreateCafeResponse> result = await mediator.Send(request);
+        if(!result.IsValid)
+        {
+            return Results.ValidationProblem(result.ValidationErrors!);
+        }
+        
         if(!result.IsSuccess)
         {
             return Results.Problem(detail: "The cafe already exists in the location", statusCode: 409);

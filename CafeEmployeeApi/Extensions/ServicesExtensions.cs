@@ -1,7 +1,9 @@
+using CafeEmployeeApi.Contracts;
 using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Models;
 using CafeEmployeeApi.Services;
 using FluentValidation;
+using MediatR;
 
 namespace CafeEmployeeApi.Extensions;
 
@@ -11,6 +13,7 @@ public static class ServicesExtensions
     {
         services.AddScoped<IValidator<CafeRequest>, CafeRequestValidator>();
         services.AddScoped<IValidator<EmployeeRequest>, EmployeeRequestValidator>();
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         
         return services;
     }
