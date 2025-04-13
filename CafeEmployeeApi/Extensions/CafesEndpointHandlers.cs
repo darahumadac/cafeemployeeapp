@@ -55,7 +55,7 @@ public static partial class EndpointExtensions
         return Results.Ok(response);
     }
 
-    private static async Task<IResult> AddCafeAsync(IMediator mediator, CafeRequest request, IValidator<CafeRequest> validator, HttpContext context)
+    private static async Task<IResult> AddCafeAsync(IMediator mediator, CreateCafeRequest request, HttpContext context)
     {
         Result<CreateCafeResponse> result = await mediator.Send(request);
         if(!result.IsValid)
@@ -74,47 +74,41 @@ public static partial class EndpointExtensions
         return Results.CreatedAtRoute("GetCafe", new { id = response.Id.ToString() }, response);
     }
 
-    private static async Task<IResult> UpdateCafeAsync(string id, CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator, HttpContext context)
+    private static async Task<IResult> UpdateCafeAsync(IMediator mediator, string id, CreateCafeRequest request, AppDbContext dbContext, IValidator<CreateCafeRequest> validator, HttpContext context)
     {
-        var validGuid = id.TryToGuid(out Guid cafeId);
-        if (!validGuid)
+        var updateRequest = new UpdateCafeRequest(
+            id, 
+            request.Name, 
+            request.Description, 
+            request.Location, 
+            context.Request.Headers.IfMatch!, 
+            request.Logo);
+
+        var result = await mediator.Send(updateRequest);
+        if(!result.IsValid)
         {
-            return Results.NotFound();
+            return Results.ValidationProblem(result.ValidationErrors!);
         }
 
-        var cafe = await dbContext.Cafes.FindAsync(cafeId);
-        if (cafe == null)
+        if(!result.IsSuccess)
         {
-            return Results.NotFound();
-        }
+            if(result.Error == StatusCodes.Status404NotFound.ToString())
+            {
+                return Results.NotFound();
+            }
+            else if(result.Error == StatusCodes.Status412PreconditionFailed.ToString())
+            {
+                return Results.StatusCode(StatusCodes.Status412PreconditionFailed);
+            }
 
-        if (Convert.ToBase64String(cafe.ETag) != context.Request.Headers.IfMatch)
-        {
-            return Results.StatusCode(StatusCodes.Status412PreconditionFailed);
-        }
-
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            return Results.ValidationProblem(validationResult.ToDictionary());
-        }
-        cafe.Name = request.Name;
-        cafe.Description = request.Description;
-        cafe.Location = request.Location;
-        cafe.Logo = request.Logo;
-        cafe.UpdatedDate = DateTime.UtcNow;
-        try
-        {
-            await dbContext.SaveChangesAsync();
-            context.Response.Headers.ETag = Convert.ToBase64String(cafe.ETag);
-            context.Response.Headers.LastModified = cafe.UpdatedDate.ToString("R");
-            return Results.Ok();
-
-        }
-        catch (DbUpdateException ex)
-        {
             return Results.Problem(detail: "The cafe already exists in the location", statusCode: 409);
         }
+
+        var cafe = result.Value!;
+        context.Response.Headers.ETag = Convert.ToBase64String(cafe.ETag);
+        context.Response.Headers.LastModified = cafe.UpdatedDate.ToString("R");
+
+        return Results.Ok();
 
     }
 

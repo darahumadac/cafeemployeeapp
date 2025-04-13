@@ -12,12 +12,14 @@ public static class ServicesExtensions
 {
     public static IServiceCollection AddRequestValidators(this IServiceCollection services)
     {
-        services.AddScoped<IValidator<CafeRequest>, CafeRequestValidator>();
+        services.AddScoped<IValidator<CreateCafeRequest>, CafeRequestValidator>();
         services.AddScoped<IValidator<EmployeeRequest>, EmployeeRequestValidator>();
         services.AddScoped<IValidator<DeleteCafeRequest>, GuidValidator>();
         services.AddScoped<IValidator<DeleteEmployeeRequest>, NoValidation<DeleteEmployeeRequest>>();
         services.AddScoped<IValidator<GetCafesRequest>, NoValidation<GetCafesRequest>>();
         services.AddScoped<IValidator<GetEmployeesRequest>, GuidValidator>();
+        services.AddScoped<IValidator<UpdateCafeRequest>, UpdateCafeIdValidator>();
+        services.AddScoped<IValidator<UpdateCafeRequest>, CafeRequestValidator>();
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         

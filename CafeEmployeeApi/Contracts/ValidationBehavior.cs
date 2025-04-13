@@ -1,5 +1,6 @@
 using CafeEmployeeApi.Contracts.Commands;
 using FluentValidation;
+using FluentValidation.Results;
 using MediatR;
 
 namespace CafeEmployeeApi.Contracts;
@@ -8,19 +9,20 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     where TRequest : notnull
     where TResponse : notnull
 {
-    private readonly IValidator<TRequest> _validator;
+    private readonly IEnumerable<IValidator<TRequest>> _validators;
 
-    public ValidationBehavior(IValidator<TRequest> validator)
+    public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
     {
-        _validator = validator;
+        _validators = validators;
     }
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        var validationResult = await _validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
+        var validationResults = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(request)));
+        if (validationResults.Any(v => !v.IsValid))
         {
-            return (TResponse)Activator.CreateInstance(typeof(TResponse), validationResult)!;
+            var errors = validationResults.Where(e => !e.IsValid).SelectMany(e => e.Errors).ToList();
+            return (TResponse)Activator.CreateInstance(typeof(TResponse), new ValidationResult(errors))!;
         }
 
         return await next();

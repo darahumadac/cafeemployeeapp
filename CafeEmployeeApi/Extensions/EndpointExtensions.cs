@@ -12,7 +12,7 @@ public static partial class EndpointExtensions
 
         cafes.MapGet("/{id}", GetCafeAsync)
             .WithName("GetCafe")
-            .CacheOutput();
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromSeconds(10)));
 
 
         var cafeEndpoints  = endpoints.MapGroup("/cafe");
