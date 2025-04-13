@@ -38,7 +38,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "CafeNewD13",
+    "name": "CafeNewD7",
     "description": "Created best cafe ever!!!",
     "location": "South Korea"
 }

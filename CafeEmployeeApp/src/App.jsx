@@ -22,14 +22,14 @@ function App() {
       </AppBar>
 
       <Routes>
-          <Route path="/cafes" index element={<ListPage />} />
-          <Route path="/employees" index element={<ListPage />} />
+          <Route path="/cafes" index element={<ListPage key="cafes" />} />
+          <Route path="/employees" element={<ListPage key="employees" />} />
 
-          <Route path="/cafes/:id" element={<FormPage title="Edit Cafe" populate/>} />
-          <Route path="/employees/:id" element={<FormPage title="Edit Employee" populate/>} />
+          <Route path="/cafes/:id" element={<FormPage title="Edit Cafe" populate key="editCafe"/>} />
+          <Route path="/employees/:id" element={<FormPage title="Edit Employee" populate key="editEmployee"/>} />
 
-          <Route path="/cafe" element={<FormPage title="Add Cafe" />} />
-          <Route path="/employee" element={<FormPage title="Add Employee"/>} />
+          <Route path="/cafe" element={<FormPage title="Add Cafe" key="addCafe" />} />
+          <Route path="/employee" element={<FormPage title="Add Employee" key="addEmployee"/>} />
       </Routes>
 
     </Router>
