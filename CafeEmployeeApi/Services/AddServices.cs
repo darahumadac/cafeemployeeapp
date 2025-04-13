@@ -1,57 +1,42 @@
 using CafeEmployeeApi.Contracts;
-using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Database;
-using CafeEmployeeApi.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CafeEmployeeApi.Services;
 
 public interface IAddService<TEntity, TResponse>
 {
-    public Task<Result<TResponse>> AddAsync(Func<TEntity> createFunc, Func<TEntity, TResponse> createResponse);
+    public Task<Result<TResponse>> AddAsync();
+    public Func<TEntity> CreateEntity { get; set; }
+    public Func<TEntity, TResponse> CreateResponse { get; set; }
 }
 
-public class AddService<TEntity, TResponse> : IAddService<TEntity, TResponse> where TEntity : class
+public class AddService<TEntity, TResponse> : IAddService<TEntity, TResponse> 
+    where TEntity : class
 {
     private readonly AppDbContext _dbContext;
-    private readonly string _updateExceptionMessage;
 
-    public AddService(
-        AppDbContext dbContext,
-        string updateExceptionMessage)
+    public AddService(AppDbContext dbContext)
     {
         _dbContext = dbContext;
-        _updateExceptionMessage = updateExceptionMessage;
     }
 
-    public async Task<Result<TResponse>> AddAsync(
-        Func<TEntity> createFunc, 
-        Func<TEntity, TResponse> createResponse)
+    public Func<TEntity> CreateEntity { get; set; } = null!;
+    public Func<TEntity, TResponse> CreateResponse { get; set; } = null!
+
+    public async Task<Result<TResponse>> AddAsync()
     {
-        var newEntity = createFunc();
+        TEntity newEntity = CreateEntity();
         try
         {
             _dbContext.Set<TEntity>().Add(newEntity);
             await _dbContext.SaveChangesAsync();
 
-            return Result<TResponse>.Success(createResponse(newEntity));
+            return Result<TResponse>.Success(CreateResponse(newEntity));
         }
         catch (DbUpdateException ex)
         {
-            //TODO: add logging
-            return Result<TResponse>.Failure(_updateExceptionMessage);
+            return Result<TResponse>.Failure(ex.Message);
         }
     }
-}
-
-public class AddCafeService : AddService<Cafe, CreateCafeResponse>
-{
-    public AddCafeService(AppDbContext dbContext) 
-    : base(dbContext, "The cafe already exists in the location") { }
-}
-
-public class AddEmployeeService : AddService<Employee, CreateEmployeeResponse>
-{
-    public AddEmployeeService(AppDbContext dbContext) 
-    : base(dbContext, "The employee already exists") { }
 }

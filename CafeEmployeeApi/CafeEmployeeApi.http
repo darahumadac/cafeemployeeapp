@@ -40,7 +40,7 @@ Accept: application/json
 {
     "name": "CafeNewDel",
     "description": "Created best cafe ever!!!",
-    "location": "Japan"
+    "location": "South Korea"
 }
 ###
 POST {{CafeEmployeeApi_HostAddress}}/cafe
@@ -102,7 +102,7 @@ Accept: application/json
 GET {{CafeEmployeeApi_HostAddress}}/employees/UImKCcFpN5i7f
 Accept: application/json
 ###
-GET {{CafeEmployeeApi_HostAddress}}/employees/UIXwUdQJncNpL
+GET {{CafeEmployeeApi_HostAddress}}/employees/UIiC0E5Syqmhk
 Accept: application/json
 If-Modified-Since: Thu, 10 Apr 2025 16:57:45 GMT
 
@@ -128,7 +128,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-    "name": "EmpDel2",
+    "name": "EmpDel3",
     "emailAddress": "employee1@cafe.com",
     "phoneNumber": "82345672",
     "gender": 0,

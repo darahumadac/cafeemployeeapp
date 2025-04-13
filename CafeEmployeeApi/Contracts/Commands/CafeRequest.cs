@@ -40,7 +40,7 @@ public class CreateCafeRequestHandler : IRequestHandler<CafeRequest, Result<Crea
     }
     public async Task<Result<CreateCafeResponse>> Handle(CafeRequest request, CancellationToken cancellationToken)
     {
-        var createCafe = () =>
+        _addService.CreateEntity = () =>
             new Cafe
             {
                 Name = request.Name,
@@ -50,7 +50,7 @@ public class CreateCafeRequestHandler : IRequestHandler<CafeRequest, Result<Crea
             };
 
 
-        var createResponse = (Cafe newCafe) =>
+        _addService.CreateResponse = (Cafe newCafe) =>
             new CreateCafeResponse
             (
                 Id: newCafe.Id,
@@ -62,6 +62,6 @@ public class CreateCafeRequestHandler : IRequestHandler<CafeRequest, Result<Crea
             );
 
 
-        return await _addService.AddAsync(createCafe, createResponse);
+        return await _addService.AddAsync();
     }
 }

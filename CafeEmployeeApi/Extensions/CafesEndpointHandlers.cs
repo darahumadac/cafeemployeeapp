@@ -2,7 +2,6 @@ using CafeEmployeeApi.Contracts;
 using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Contracts.Queries;
 using CafeEmployeeApi.Database;
-using CafeEmployeeApi.Models;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -73,7 +72,7 @@ public static partial class EndpointExtensions
         Result<CreateCafeResponse> result = await mediator.Send(request);
         if(!result.IsSuccess)
         {
-            return Results.Problem(detail: result.Error, statusCode: 409);
+            return Results.Problem(detail: "The cafe already exists in the location", statusCode: 409);
         }
 
         var response = result.Value!;

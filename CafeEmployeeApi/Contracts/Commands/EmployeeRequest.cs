@@ -60,7 +60,7 @@ public class CreateEmployeeRequestHandler : IRequestHandler<EmployeeRequest, Res
     }
     public async Task<Result<CreateEmployeeResponse>> Handle(EmployeeRequest request, CancellationToken cancellationToken)
     {
-        var createEmployee = () =>
+        _addService.CreateEntity = () =>
             new Employee
             {
                 Name = request.Name,
@@ -71,7 +71,7 @@ public class CreateEmployeeRequestHandler : IRequestHandler<EmployeeRequest, Res
                 StartDate = request.AssignedCafeId != null ? DateTime.UtcNow : null
             };
 
-        var createResponse = (Employee newEmployee) =>
+        _addService.CreateResponse = (Employee newEmployee) =>
             new CreateEmployeeResponse(
                 Id: newEmployee.Id,
                 Name: newEmployee.Name,
@@ -83,6 +83,6 @@ public class CreateEmployeeRequestHandler : IRequestHandler<EmployeeRequest, Res
             );
 
 
-        return await _addService.AddAsync(createEmployee, createResponse);
+        return await _addService.AddAsync();
     }
 }

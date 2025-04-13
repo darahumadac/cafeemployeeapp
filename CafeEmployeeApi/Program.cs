@@ -19,8 +19,8 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(buil
 
 builder.Services.AddScoped<IDeleteService<string>, EmployeeDeleteService>();
 builder.Services.AddScoped<IDeleteService<Guid>, CafeDeleteService>();
-builder.Services.AddScoped<IAddService<Cafe, CreateCafeResponse>, AddCafeService>();
-builder.Services.AddScoped<IAddService<Employee, CreateEmployeeResponse>, AddEmployeeService>();
+builder.Services.AddScoped<IAddService<Cafe, CreateCafeResponse>, AddService<Cafe, CreateCafeResponse>>();
+builder.Services.AddScoped<IAddService<Employee, CreateEmployeeResponse>, AddService<Employee, CreateEmployeeResponse>>();
 builder.Services.AddMediatR(cfg => 
 {
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);

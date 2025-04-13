@@ -83,7 +83,7 @@ public static partial class EndpointExtensions
         Result<CreateEmployeeResponse> result = await mediator.Send(request);
         if(!result.IsSuccess)
         {
-            return Results.Problem(detail: result.Error, statusCode: 409);
+            return Results.Problem(detail: "The employee already exists", statusCode: 409);
         }
         
         var response = result.Value!;
