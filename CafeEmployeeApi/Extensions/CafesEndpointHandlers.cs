@@ -83,11 +83,6 @@ public static partial class EndpointExtensions
 
     private static async Task<IResult> UpdateCafeAsync(string id, CafeRequest request, AppDbContext dbContext, IValidator<CafeRequest> validator, HttpContext context)
     {
-        if (string.IsNullOrEmpty(context.Request.Headers.IfMatch))
-        {
-            return Results.Problem(detail: "Missing If-Match header.", statusCode: StatusCodes.Status428PreconditionRequired);
-        }
-
         var validGuid = id.TryToGuid(out Guid cafeId);
         if (!validGuid)
         {

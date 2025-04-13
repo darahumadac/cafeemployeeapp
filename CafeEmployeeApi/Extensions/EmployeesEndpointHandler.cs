@@ -95,11 +95,6 @@ public static partial class EndpointExtensions
 
     private static async Task<IResult> UpdateEmployeeAsync(string id, EmployeeRequest request, AppDbContext dbContext, IValidator<EmployeeRequest> validator, HttpContext context)
     {
-        if (string.IsNullOrEmpty(context.Request.Headers.IfMatch))
-        {
-            return Results.Problem(detail: "Missing If-Match header.", statusCode: StatusCodes.Status428PreconditionRequired);
-        }
-
         var employee = await dbContext.Employees.FindAsync(id);
         if (employee == null)
         {

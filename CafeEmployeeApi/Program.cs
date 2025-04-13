@@ -1,8 +1,5 @@
-using CafeEmployeeApi.Contracts.Commands;
 using CafeEmployeeApi.Database;
 using CafeEmployeeApi.Extensions;
-using CafeEmployeeApi.Models;
-using CafeEmployeeApi.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -61,6 +58,20 @@ app.UseHttpsRedirection();
 app.UseOutputCache();
 
 //TODO: group api versions here
+
+//middleware to check if-match header for put requests
+app.Use(async (context, next) => {
+    if(context.Request.Method == "PUT" && string.IsNullOrEmpty(context.Request.Headers.IfMatch))
+    {
+        await Results.Problem(
+            detail: "Missing If-Match header.", 
+            statusCode: StatusCodes.Status428PreconditionRequired)
+        .ExecuteAsync(context);
+
+        return;
+    }
+    await next(context);
+});
 
 //map endpoints
 app.MapCafeEndpoints();
