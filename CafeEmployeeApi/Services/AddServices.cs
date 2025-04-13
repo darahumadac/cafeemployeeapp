@@ -22,7 +22,7 @@ public class AddService<TEntity, TResponse> : IAddService<TEntity, TResponse>
     }
 
     public Func<TEntity> CreateEntity { get; set; } = null!;
-    public Func<TEntity, TResponse> CreateResponse { get; set; } = null!
+    public Func<TEntity, TResponse> CreateResponse { get; set; } = null!;
 
     public async Task<Result<TResponse>> AddAsync()
     {
