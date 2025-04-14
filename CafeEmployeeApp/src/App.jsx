@@ -31,7 +31,7 @@ function App() {
           <Route path="/cafes" index element={<ListPage key="cafes" />} />
           <Route path="/employees" element={<ListPage key="employees" />} />
 
-          <Route path="/cafes/:id" element={<FormPage title="Edit Cafe" populate key="editCafe"/>} />
+          <Route path="/cafes/:id" element={<FormPage title="Edit Cafe" populate key="editCafe" fields={['name','location','description']} entity="cafe"/>} />
           <Route path="/employees/:id" element={<FormPage title="Edit Employee" populate key="editEmployee"/>} />
 
           <Route path="/cafe" element={<FormPage title="Add Cafe" key="addCafe" />} />

@@ -22,12 +22,16 @@ const validators = {
   },
 };
 
-const FormPage = ({ title, populate = false, fields }) => {
+const FormPage = ({ title, populate = false, entity }) => {
   // console.log(populate);
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
   const ADD_URL = `${API_URL}${pathname}`;
+  const UPDATE_URL = ADD_URL.replace(
+    `${API_URL}/${entity}s`,
+    `${API_URL}/${entity}`
+  );
 
   const { id } = useParams();
   const clearForm = {
@@ -35,9 +39,10 @@ const FormPage = ({ title, populate = false, fields }) => {
     description: { value: "", isValid: true },
     location: { value: "", isValid: true },
   };
-  
+
   const [formData, setFormData] = useState(clearForm);
   const [isFormDirty, setIsFormDirty] = useState(false);
+  const [etag, setEtag] = useState("");
 
   useEffect(() => {
     populate &&
@@ -45,21 +50,23 @@ const FormPage = ({ title, populate = false, fields }) => {
         .get(`${API_URL}${pathname}`)
         .then((response) => {
           const data = response.data;
-          const currentData = Object.entries(data).map(([key, value]) => {
-            if(!value) return;
-            return {[key] : {value, isValid: true}}
-          }).filter(o => o);
-  
-          const currentFormData = Object.fromEntries(currentData.map(d => {
-            return [Object.keys(d)[0], Object.values(d)[0]]
-          }));
-          setFormData(currentFormData);
-          
+          const currentData = Object.entries(data)
+            .map(([key, value]) => {
+              if (!value) return;
+              return { [key]: { value, isValid: true } };
+            })
+            .filter((o) => o);
 
+          const currentFormData = Object.fromEntries(
+            currentData.map((d) => {
+              return [Object.keys(d)[0], Object.values(d)[0]];
+            })
+          );
+          setFormData(currentFormData);
+          setEtag(response.headers["etag"]);
         })
         .catch((err) => console.log(err, "error loading"));
   }, []);
-
 
   const [statusAlert, setStatusAlert] = useState({
     severity: "",
@@ -87,6 +94,40 @@ const FormPage = ({ title, populate = false, fields }) => {
       return;
     }
     console.log("Submitted User Info:", formData);
+
+    if (populate) {
+      axios
+        .put(
+          `${UPDATE_URL}`,
+          {
+            name: formData.name.value,
+            description: formData.description.value,
+            location: formData.location.value,
+          },
+          {
+            headers: {
+              "If-Match": `${etag}`,
+            },
+          }
+        )
+        .then((response) => {
+          showAlert("success", "Updated successfully");
+          setEtag(response.headers["etag"]);
+          setIsFormDirty(false);
+        })
+        .catch((err) => {
+          let errMsg = err.response.data.detail || "Something went wrong";
+          if (err.response.status == 412) {
+            errMsg =
+              "Someone else may have edited this item while you were working. Please reload the page to see the latest version.";
+          }
+          showAlert("error", errMsg);
+          // console.log(err.response)
+        });
+
+      return;
+    }
+
     axios
       .post(`${ADD_URL}`, {
         name: formData.name.value,
@@ -158,13 +199,17 @@ const FormPage = ({ title, populate = false, fields }) => {
       <Button type="submit" variant="contained">
         Submit
       </Button>
-      <Button onClick={() => {
-        if(isFormDirty){
-          confirm("You have unsaved changes. Are you sure you want to leave this page?") && navigate(-1)
-        }else{
-          navigate(-1)
-        }
-      }} >
+      <Button
+        onClick={() => {
+          if (isFormDirty) {
+            confirm(
+              "You have unsaved changes. Are you sure you want to leave this page?"
+            ) && navigate(-1);
+          } else {
+            navigate(-1);
+          }
+        }}
+      >
         Cancel
       </Button>
     </Box>
