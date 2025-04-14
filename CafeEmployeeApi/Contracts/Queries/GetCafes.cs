@@ -22,7 +22,7 @@ public class GetCafesRequestHandler : IRequestHandler<GetCafesRequest, IEnumerab
             .Where(c => string.IsNullOrEmpty(request.Location) || c.Location == request.Location)
             .Include(c => c.Employees)
             .OrderByDescending(c => c.Employees.Count)
-            .ThenBy(c => c.Name)
+            .ThenBy(c => c.UpdatedDate)
             .ToListAsync();
     }
 }
