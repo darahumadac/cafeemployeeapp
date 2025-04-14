@@ -24,11 +24,11 @@ import SearchBar from "../SearchBar.jsx";
 import Dropdown from "../Dropdown.jsx";
 
 const ListPage = () => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const entityName = pathname.slice(1, -1);
   const entityPath = pathname.slice(0, -1);
 
-  const GET_LIST_URL = `${API_URL}${pathname}`;
+  const GET_LIST_URL = `${API_URL}${pathname}${search}`;
   const DELETE_URL = `${API_URL}${entityPath}`;
   const dropdownRef = useRef(null);
 
