@@ -1,0 +1,25 @@
+name: cafeemployeeapp
+
+services:
+  ui:
+    container_name: ui
+    build:
+      context: ./CafeEmployeeApp
+    ports:
+      - 5173:80
+  api:
+    container_name: api
+    build:
+      context: ./CafeEmployeeApi
+    environment:
+      - ASPNETCORE_URLS=http://*:80
+    ports:
+      - 5191:80
+  db:
+    container_name: db
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=yourStrong(!)Password
+    ports:
+      - 1433:1433
