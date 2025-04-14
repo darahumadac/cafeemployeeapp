@@ -10,7 +10,7 @@ import {
   TablePagination,
   Paper,
   Box,
-  CircularProgress
+  CircularProgress,
 } from "@mui/material";
 // import Table from "../Table.jsx";
 import axios from "axios";
@@ -36,6 +36,8 @@ const ListPage = () => {
   const [loading, setLoading] = useState(true);
   const [reload, setReload] = useState(true);
   const [lastModified, setLastModified] = useState("");
+  const defaultSelection = "All";
+  const [selected, setSelected] = useState(defaultSelection);
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
@@ -43,16 +45,20 @@ const ListPage = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5); // Rows per page
 
   //dropdown handler
-  const handleLocationChange = (event, setSelected) => {
-    const selectedItem = event.target.value;
+  const handleLocationChange = (event, setSelected, location) => {
+    const selectedItem = (event && event.target.value) || location;
     setSelected(selectedItem);
-    if(selectedItem === "All")
-    {
+    if (
+      selectedItem.trim().toLowerCase() === "all" ||
+      selectedItem.trim() === ""
+    ) {
       setReload(true);
       return;
     }
     //query records by location
-    axios.get(`${GET_LIST_URL}?location=${selectedItem}`).then((response) => setRows(response.data))
+    axios
+      .get(`${GET_LIST_URL}?location=${selectedItem}`)
+      .then((response) => setRows(response.data));
   };
 
   // Pagination handlers
@@ -64,18 +70,10 @@ const ListPage = () => {
 
   useEffect(() => {
     loadData();
-    console.log(dropdownRef.current)
-    if(!dropdownRef.current)
-    {
-      dropdownRef.current = rows.map((item) => item.location);
-      console.log(dropdownRef.current);
-    }
   }, [reload]);
 
-
-
   const loadData = () => {
-    if(!reload) return;
+    if (!reload) return;
     console.log("load data:", GET_LIST_URL);
     setLoading(true);
     axios
@@ -88,7 +86,9 @@ const ListPage = () => {
         const dataList = response.data;
         setLastModified(response.headers["last-modified"]);
         setRows(dataList);
-        // setReload(true);
+        if (!dropdownRef.current) {
+          dropdownRef.current = dataList.map((item) => item.location);
+        }
         console.log("done set data row");
       })
       .catch((err) => {
@@ -99,8 +99,6 @@ const ListPage = () => {
         setLoading(false);
       });
   };
-
-  
 
   const handleDelete = (e, data) => {
     e.preventDefault();
@@ -128,8 +126,6 @@ const ListPage = () => {
     //if yes, call
   };
 
-
-
   const [columns] = useState(DATA_HEADERS[pathname].map((h) => ({ field: h })));
 
   // Get visible rows
@@ -142,12 +138,22 @@ const ListPage = () => {
     <>
       {/* <ConfirmModal open={confirmDeleteOpen} /> */}
       <Paper>
-        <Button onClick={() => setReload(true)}>Refresh</Button>
+        <Button
+          onClick={() => {
+            setReload(true);
+            setSelected(defaultSelection);
+          }}
+        >
+          Refresh
+        </Button>
         {/* {entityName == "employee" && <SearchBar toSearch={entityName} />} */}
         {entityName == "cafe" && (
           <Dropdown
+            defaultSelection={defaultSelection}
             label={"Location"}
-            items={rows.map((item) => item.location)}
+            items={dropdownRef.current}
+            selected={selected}
+            setSelected={setSelected}
             handleChange={handleLocationChange}
           />
         )}
@@ -165,38 +171,45 @@ const ListPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {loading &&  (<TableRow>
-              <TableCell colSpan={columns.length+2}>
-                <Box display="flex" justifyContent="center" alignItems="center" height={100}>
-                  <CircularProgress />
-                </Box>
-              </TableCell>
-            </TableRow>) ||
-              paginatedRows.map((row) => (
-                <TableRow key={row.id}>
-                  {columns.map((c) => (
-                    <TableCell key={c.field}>
-                      {(c.field == "employees" && (
-                        <Link
-                          to={{
-                            pathname: "/employees",
-                            search: `?cafe=${row.id}`,
-                          }}
-                        >
-                          {row[c.field]}
-                        </Link>
-                      )) ||
-                        row[c.field]}
-                    </TableCell>
-                  ))}
-                  <TableCell>
-                    <Button href={`${pathname}/${row.id}`}>Edit</Button>
-                    <Button onClick={(e) => handleDelete(e, row)}>
-                      Delete
-                    </Button>
+              {(loading && (
+                <TableRow>
+                  <TableCell colSpan={columns.length + 2}>
+                    <Box
+                      display="flex"
+                      justifyContent="center"
+                      alignItems="center"
+                      height={100}
+                    >
+                      <CircularProgress />
+                    </Box>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) ||
+                paginatedRows.map((row) => (
+                  <TableRow key={row.id}>
+                    {columns.map((c) => (
+                      <TableCell key={c.field}>
+                        {(c.field == "employees" && (
+                          <Link
+                            to={{
+                              pathname: "/employees",
+                              search: `?cafe=${row.id}`,
+                            }}
+                          >
+                            {row[c.field]}
+                          </Link>
+                        )) ||
+                          row[c.field]}
+                      </TableCell>
+                    ))}
+                    <TableCell>
+                      <Button href={`${pathname}/${row.id}`}>Edit</Button>
+                      <Button onClick={(e) => handleDelete(e, row)}>
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>

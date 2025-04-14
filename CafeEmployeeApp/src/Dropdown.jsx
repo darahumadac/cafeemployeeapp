@@ -1,12 +1,18 @@
 import Select from "@mui/material/Select";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
-import Box from '@mui/material/Box';
+import Box from "@mui/material/Box";
 import { useState } from "react";
 
-const Dropdown = ({ label, items, handleChange }) => {
-  const menuItems = [... new Set(items)].sort();
-  const [selected, setSelected] = useState("All");
+const Dropdown = ({
+  defaultSelection,
+  label,
+  items,
+  handleChange,
+  selected,
+  setSelected,
+}) => {
+  const menuItems = [...new Set(items)].sort();
   return (
     <>
       <Box sx={{ minWidth: 300 }}>
@@ -18,7 +24,7 @@ const Dropdown = ({ label, items, handleChange }) => {
           label={label}
           onChange={(e) => handleChange(e, setSelected)}
         >
-            <MenuItem value="All">All</MenuItem>
+          <MenuItem value={defaultSelection}>{defaultSelection}</MenuItem>
           {menuItems.map((item, i) => (
             <MenuItem key={i} value={item}>
               {item}
