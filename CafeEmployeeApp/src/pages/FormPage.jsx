@@ -29,25 +29,37 @@ const FormPage = ({ title, populate = false, fields }) => {
 
   const ADD_URL = `${API_URL}${pathname}`;
 
-  useEffect(() => {
-    populate &&
-      axios
-        .get(`${API_URL}${pathname}`)
-        .then((response) => {
-          const data = response.data;
-          console.log(data);
-        })
-        .catch((err) => console.log(err, "error loading"));
-  });
-
   const { id } = useParams();
   const clearForm = {
     name: { value: "", isValid: true },
     description: { value: "", isValid: true },
     location: { value: "", isValid: true },
   };
-
+  
   const [formData, setFormData] = useState(clearForm);
+  const [isFormDirty, setIsFormDirty] = useState(false);
+
+  useEffect(() => {
+    populate &&
+      axios
+        .get(`${API_URL}${pathname}`)
+        .then((response) => {
+          const data = response.data;
+          const currentData = Object.entries(data).map(([key, value]) => {
+            if(!value) return;
+            return {[key] : {value, isValid: true}}
+          }).filter(o => o);
+  
+          const currentFormData = Object.fromEntries(currentData.map(d => {
+            return [Object.keys(d)[0], Object.values(d)[0]]
+          }));
+          setFormData(currentFormData);
+          
+
+        })
+        .catch((err) => console.log(err, "error loading"));
+  }, []);
+
 
   const [statusAlert, setStatusAlert] = useState({
     severity: "",
@@ -57,6 +69,7 @@ const FormPage = ({ title, populate = false, fields }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    setIsFormDirty(true);
     setFormData({
       ...formData,
       [name]: {
@@ -65,18 +78,11 @@ const FormPage = ({ title, populate = false, fields }) => {
         isValid: !validators[name] || validators[name].isValid(value),
       },
     });
-    console.log(formData[name].isValid);
+    // console.log(formData[name].isValid);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    //validate fields
-    // Object.keys(formData).forEach(field => {
-    //     setFormData((prev) => ({
-    //         ...prev,
-    //         [name]: {...prev[name], isValid: }
-    //     }));
-    // })
     if (Object.keys(formData).some((field) => !formData[field].isValid)) {
       return;
     }
@@ -152,7 +158,13 @@ const FormPage = ({ title, populate = false, fields }) => {
       <Button type="submit" variant="contained">
         Submit
       </Button>
-      <Button onClick={() => navigate(-1)} >
+      <Button onClick={() => {
+        if(isFormDirty){
+          confirm("You have unsaved changes. Are you sure you want to leave this page?") && navigate(-1)
+        }else{
+          navigate(-1)
+        }
+      }} >
         Cancel
       </Button>
     </Box>
