@@ -141,7 +141,7 @@ const ListPage = () => {
         <Button
           onClick={() => {
             setReload(true);
-            setSelected(defaultSelection);
+            entityName == "cafe" && setSelected(defaultSelection);
           }}
         >
           Refresh
