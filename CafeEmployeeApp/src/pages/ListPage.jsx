@@ -19,7 +19,7 @@ import { API_URL, DATA_HEADERS } from "../../config.js";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import ConfirmModal from "../ConfirmModal.jsx";
+import Confirm from "../Confirm.jsx";
 import SearchBar from "../SearchBar.jsx";
 import Dropdown from "../Dropdown.jsx";
 
@@ -40,6 +40,7 @@ const ListPage = () => {
   const [selected, setSelected] = useState(defaultSelection);
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [toDelete, setToDelete] = useState(null);
 
   const [page, setPage] = useState(0); // Current page
   const [rowsPerPage, setRowsPerPage] = useState(5); // Rows per page
@@ -100,30 +101,31 @@ const ListPage = () => {
       });
   };
 
-  const handleDelete = (e, data) => {
+  const proceedDelete = (data) => {
+    const DELETE_ITEM_URL = `${DELETE_URL}/${data.id}`;
+    axios
+      .delete(DELETE_ITEM_URL)
+      .then((response) => {
+        console.log("reloading");
+        setLastModified(response.headers["last-modified"]);
+        //TODO: reducer
+        setConfirmDeleteOpen(false);
+        setToDelete(null);
+        setSelected(defaultSelection);
+        setReload(true);
+      })
+      .catch(() => {
+        // console.log("error deleting");
+      })
+      .finally(() => {
+        // console.log("done delete refresh");
+      });
+  };
+
+  const showConfirmDelete = (e, data) => {
     e.preventDefault();
     setConfirmDeleteOpen(true);
-    const toDelete = confirm(`are you sure you want to delete: ${data.name}`);
-    if (toDelete) {
-      const DELETE_ITEM_URL = `${DELETE_URL}/${data.id}`;
-      axios
-        .delete(DELETE_ITEM_URL)
-        .then((response) => {
-          console.log("reloading");
-          setLastModified(response.headers["last-modified"]);
-          // loadData();
-          setReload(true);
-        })
-        .catch(() => {
-          // console.log("error deleting");
-        })
-        .finally(() => {
-          // console.log("done delete refresh");
-        });
-    }
-
-    //show modal confirm
-    //if yes, call
+    setToDelete(data);
   };
 
   const [columns] = useState(DATA_HEADERS[pathname].map((h) => ({ field: h })));
@@ -136,7 +138,14 @@ const ListPage = () => {
 
   return (
     <>
-      {/* <ConfirmModal open={confirmDeleteOpen} /> */}
+      <Confirm
+        open={confirmDeleteOpen}
+        setOpen={setConfirmDeleteOpen}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this?"
+        toDelete={toDelete}
+        handleDelete={proceedDelete}
+      />
       <Paper>
         <Button
           onClick={() => {
@@ -204,7 +213,7 @@ const ListPage = () => {
                     ))}
                     <TableCell>
                       <Button href={`${pathname}/${row.id}`}>Edit</Button>
-                      <Button onClick={(e) => handleDelete(e, row)}>
+                      <Button onClick={(e) => showConfirmDelete(e, row)}>
                         Delete
                       </Button>
                     </TableCell>
