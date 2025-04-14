@@ -4,7 +4,7 @@ import { useParams, useLocation } from "react-router-dom";
 import { API_URL } from "../../config.js";
 import { TextField, MenuItem, Button, Box, Typography } from "@mui/material";
 import Alert from "@mui/material/Alert";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const validators = {
   name: {
@@ -22,9 +22,11 @@ const validators = {
   },
 };
 
-const FormPage = ({ title, populate = false }) => {
+const FormPage = ({ title, populate = false, fields }) => {
   // console.log(populate);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
   const ADD_URL = `${API_URL}${pathname}`;
 
   useEffect(() => {
@@ -107,9 +109,6 @@ const FormPage = ({ title, populate = false }) => {
       onSubmit={handleSubmit}
       sx={{ display: "flex", flexDirection: "column", gap: 2, width: 300 }}
     >
-      <Button to="/cafes" component={Link}>
-        Go back to cafes
-      </Button>
       {statusAlert.show && (
         <Alert
           severity={statusAlert.severity}
@@ -152,6 +151,9 @@ const FormPage = ({ title, populate = false }) => {
       ></TextField>
       <Button type="submit" variant="contained">
         Submit
+      </Button>
+      <Button onClick={() => navigate(-1)} >
+        Cancel
       </Button>
     </Box>
   );
