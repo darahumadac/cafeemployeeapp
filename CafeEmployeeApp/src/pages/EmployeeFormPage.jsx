@@ -13,6 +13,7 @@ import {
   Radio,
   FormLabel,
   Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import Alert from "@mui/material/Alert";
 import { Link, useNavigate } from "react-router-dom";
@@ -46,7 +47,7 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
     `${API_URL}/${entity}`
   );
 
-  const { id } = useParams();
+  
   const clearForm = {
     name: { value: "", isValid: true },
     emailAddress: { value: "", isValid: true },
@@ -59,20 +60,22 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [etag, setEtag] = useState("");
   const cafeRef = useRef(null);
-  const [selected, setSelected] = useState(null);
+  const cafesRef = useRef(null);
+  const assignedCafeIdRef = useRef(null);
+  const [selected, setSelected] = useState({ label: "test2", id: 0 });
+  const [selectedItem, setSelectedItem] = useState({ label: "Unassigned", id: null });
   const [cafes, setCafes] = useState([]);
+  const [loading, setLoading] = useState(populate);
 
+  console.log(populate)
+
+  //for add
   useEffect(() => {
-    //TODO: implement location endpoint
-    // if(populate) return;
+    if (populate) return;
+
     axios.get(`${API_URL}/cafes`).then((response) => {
       const allCafes = response.data;
       cafeRef.current = allCafes;
-      // console.log(
-      //   allCafes.map((c) => {
-      //     return { label: c.name, id: c.id };
-      //   })
-      // );
       setCafes(
         allCafes.map((c) => {
           return { label: `${c.name} - ${c.location}`, id: c.id };
@@ -81,28 +84,78 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
     });
   }, []);
 
+  //for edit
   useEffect(() => {
+    
+    if(populate){
+      setLoading(true);
+    }
     populate &&
       axios
-        .get(`${API_URL}${pathname}`)
+        .get(`${API_URL}/cafes`)
         .then((response) => {
-          const data = response.data;
-          const currentData = Object.entries(data)
-            .map(([key, value]) => {
-              if (!value) return;
-              return { [key]: { value, isValid: true } };
-            })
-            .filter((o) => o);
+          const allCafes = response.data;
+          cafeRef.current = allCafes;
+          const cafeOptions = allCafes.map((c) => {
+            return { label: `${c.name} - ${c.location}`, id: c.id };
+          });
+          cafesRef.current = cafeOptions;
+          setCafes(cafeOptions);
 
-          const currentFormData = Object.fromEntries(
-            currentData.map((d) => {
-              return [Object.keys(d)[0], Object.values(d)[0]];
-            })
-          );
-          setFormData(currentFormData);
-          setEtag(response.headers["etag"]);
+          console.log("cafe set", cafes, cafesRef);
         })
-        .catch((err) => console.log(err, "error loading"));
+        .then(() => {
+          axios
+            .get(`${API_URL}${pathname}`)
+            .then((response) => {
+              const data = response.data;
+              const currentData = Object.entries(data)
+                .map(([key, value]) => {
+                  if (!value) return;
+                  return { [key]: { value, isValid: true } };
+                })
+                .filter((o) => o);
+
+              const currentFormData = Object.fromEntries(
+                currentData.map((d) => {
+                  return [Object.keys(d)[0], Object.values(d)[0]];
+                })
+              );
+              assignedCafeIdRef.current =
+                currentFormData.assignedCafeId?.value || null;
+
+              console.log(currentFormData);
+              setFormData({ ...formData, ...currentFormData });
+              console.log(cafesRef.current);
+              console.log(
+                cafesRef.current.find((c) => c.id == assignedCafeIdRef.current)
+              );
+              setSelectedItem(
+                cafesRef.current.find((c) => c.id == assignedCafeIdRef.current)
+              );
+              setSelected(
+                cafesRef.current.find((c) => c.id == assignedCafeIdRef.current)
+              );
+
+              setEtag(response.headers["etag"]);
+            })
+            .catch((err) => {
+              console.log(err);
+              let errMsg = err?.response.data.detail || "Something went wrong";
+              if (err.response.status == 412) {
+                errMsg =
+                  "Someone else may have edited this item while you were working. Please reload the page to see the latest version.";
+              }
+              showAlert("error", errMsg);
+            })
+            .finally(() => {
+              setLoading(false);
+            });
+        }).catch((err) => {
+          showAlert("error", "Something went wrong");
+        }).finally(() => {
+          setLoading(false);
+        });
   }, []);
 
   const [statusAlert, setStatusAlert] = useState({
@@ -132,14 +185,17 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
     }
     console.log("Submitted User Info:", formData);
 
+    setLoading(true);
     if (populate) {
       axios
         .put(
           `${UPDATE_URL}`,
           {
             name: formData.name.value,
-            description: formData.description.value,
-            location: formData.location.value,
+            emailAddress: formData.emailAddress.value,
+            phoneNumber: formData.phoneNumber.value,
+            gender: Number(formData.gender.value),
+            assignedCafeId: selected,
           },
           {
             headers: {
@@ -160,11 +216,13 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
           }
           showAlert("error", errMsg);
           // console.log(err.response)
+        })
+        .finally(() => {
+          setLoading(false);
         });
 
       return;
     }
-
 
     axios
       .post(`${ADD_URL}`, {
@@ -179,7 +237,8 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
         //clear fields
         clearFormData();
       })
-      .catch((err) => showAlert("error", err.response.data.detail));
+      .catch((err) => showAlert("error", err.response.data.detail))
+      .finally(() => setLoading(false));
   };
 
   const showAlert = (severity, message) => {
@@ -192,7 +251,9 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
   };
 
   const handleCafeChange = (e, newValue) => {
+    console.log("cafe change", newValue);
     setSelected(newValue.id);
+    setSelectedItem(newValue);
     setFormData({
       ...formData,
       assignedCafeId: { value: newValue.id, isValid: true },
@@ -214,83 +275,88 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
         </Alert>
       )}
       <Typography variant="h6">{title} Form</Typography>
-      <TextField
-        label="Name"
-        name="name"
-        value={formData.name.value}
-        onChange={handleChange}
-        fullWidth
-        required
-        error={!formData.name.isValid}
-        helperText={!formData.name.isValid && validators["name"].helperText}
-      />
-      <TextField
-        label="Email Address"
-        name="emailAddress"
-        value={formData.emailAddress.value}
-        onChange={handleChange}
-        fullWidth
-        required
-        error={!formData.emailAddress.isValid}
-        helperText={
-          !formData.emailAddress.isValid &&
-          validators["emailAddress"].helperText
-        }
-      />
-      <TextField
-        label="Phone Number"
-        name="phoneNumber"
-        value={formData.phoneNumber.value}
-        onChange={handleChange}
-        fullWidth
-        required
-        error={!formData.phoneNumber.isValid}
-        helperText={
-          !formData.phoneNumber.isValid && validators["phoneNumber"].helperText
-        }
-      ></TextField>
-      <FormLabel>Gender</FormLabel>
-      <RadioGroup
-        defaultValue={0}
-        name="gender"
-        onChange={handleChange}
-        value={formData.gender.value}
-      >
-        <FormControlLabel value={0} control={<Radio />} label="Male" />
-        <FormControlLabel value={1} control={<Radio />} label="Female" />
-      </RadioGroup>
-      <FormLabel>Assigned Cafe</FormLabel>
-      <Autocomplete
-        disablePortal
-        options={cafes}
-        getOptionLabel={(option) => option.label}
-        sx={{ width: 300 }}
-        onChange={handleCafeChange}
-        onInputChange={handleCafeChange}
-        renderInput={(params) => (
+      {(loading && <CircularProgress />) || (
+        <>
           <TextField
-            {...params}
-            label={`${cafes.length === 0 ? "Loading" : "Select Cafe"}`}
-            value={selected}
+            label="Name"
+            name="name"
+            value={formData.name.value}
+            onChange={handleChange}
+            fullWidth
+            required
+            error={!formData.name.isValid}
+            helperText={!formData.name.isValid && validators["name"].helperText}
           />
-        )}
-      />
-      <Button type="submit" variant="contained">
-        Submit
-      </Button>
-      <Button
-        onClick={() => {
-          if (isFormDirty) {
-            confirm(
-              "You have unsaved changes. Are you sure you want to leave this page?"
-            ) && navigate(-1);
-          } else {
-            navigate(-1);
-          }
-        }}
-      >
-        Cancel
-      </Button>
+          <TextField
+            label="Email Address"
+            name="emailAddress"
+            value={formData.emailAddress.value}
+            onChange={handleChange}
+            fullWidth
+            required
+            error={!formData.emailAddress.isValid}
+            helperText={
+              !formData.emailAddress.isValid &&
+              validators["emailAddress"].helperText
+            }
+          />
+          <TextField
+            label="Phone Number"
+            name="phoneNumber"
+            value={formData.phoneNumber.value}
+            onChange={handleChange}
+            fullWidth
+            required
+            error={!formData.phoneNumber.isValid}
+            helperText={
+              !formData.phoneNumber.isValid &&
+              validators["phoneNumber"].helperText
+            }
+          ></TextField>
+          <FormLabel>Gender</FormLabel>
+          <RadioGroup
+            defaultValue={0}
+            name="gender"
+            onChange={handleChange}
+            value={formData.gender.value}
+          >
+            <FormControlLabel value={0} control={<Radio />} label="Male" />
+            <FormControlLabel value={1} control={<Radio />} label="Female" />
+          </RadioGroup>
+          <FormLabel>Assigned Cafe</FormLabel>
+          <Autocomplete
+            disablePortal
+            options={cafes}
+            sx={{ width: 300 }}
+            onChange={handleCafeChange}
+            onInputChange={handleCafeChange}
+            value={selectedItem}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label={`${cafes.length === 0 ? "Loading" : "Select Cafe"}`}
+                value={selected}
+              />
+            )}
+          />
+          <Button type="submit" variant="contained">
+            Submit
+          </Button>
+          <Button
+            onClick={() => {
+              if (isFormDirty) {
+                confirm(
+                  "You have unsaved changes. Are you sure you want to leave this page?"
+                ) && navigate(-1);
+              } else {
+                navigate(-1);
+              }
+            }}
+          >
+            Cancel
+          </Button>
+        </>
+      )}
     </Box>
   );
 };

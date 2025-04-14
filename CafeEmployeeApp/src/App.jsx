@@ -34,10 +34,10 @@ function App() {
           <Route path="/employees" element={<ListPage key="employees"/>} />
 
           <Route path="/cafes/:id" element={<FormPage title="Edit Cafe" populate key="editCafe" entity="cafe"/>} />
-          <Route path="/employees/:id" element={<EmployeeFormPage title="Edit Employee" populate key="editEmployee"/>} />
+          <Route path="/employees/:id" element={<EmployeeFormPage title="Edit Employee" populate key="editEmployee" entity="employee"/>} />
 
           <Route path="/cafe" element={<FormPage title="Add Cafe" key="addCafe" />} />
-          <Route path="/employee" element={<EmployeeFormPage title="Add Employee" key="addEmployee"/>} />
+          <Route path="/employee" element={<EmployeeFormPage title="Add Employee" key="addEmployee" populate={false}/>} />
       </Routes>
 
     </Router>
