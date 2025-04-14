@@ -1,11 +1,12 @@
 import React from 'react';
 import { useState } from 'react'
 import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'; 
 import './App.css'
 import ListPage from './pages/ListPage';
 import FormPage from './pages/FormPage';
+import EmployeeFormPage from './pages/EmployeeFormPage';
 
 function App() {
   // Register all Community features
@@ -28,14 +29,15 @@ function App() {
       </AppBar>
 
       <Routes>
+          <Route path="/" element={<Navigate to="/cafes" replace />} />
           <Route path="/cafes" index element={<ListPage key="cafes" />} />
-          <Route path="/employees" element={<ListPage key="employees" />} />
+          <Route path="/employees" element={<ListPage key="employees"/>} />
 
-          <Route path="/cafes/:id" element={<FormPage title="Edit Cafe" populate key="editCafe" fields={['name','location','description']} entity="cafe"/>} />
-          <Route path="/employees/:id" element={<FormPage title="Edit Employee" populate key="editEmployee"/>} />
+          <Route path="/cafes/:id" element={<FormPage title="Edit Cafe" populate key="editCafe" entity="cafe"/>} />
+          <Route path="/employees/:id" element={<EmployeeFormPage title="Edit Employee" populate key="editEmployee"/>} />
 
           <Route path="/cafe" element={<FormPage title="Add Cafe" key="addCafe" />} />
-          <Route path="/employee" element={<FormPage title="Add Employee" key="addEmployee"/>} />
+          <Route path="/employee" element={<EmployeeFormPage title="Add Employee" key="addEmployee"/>} />
       </Routes>
 
     </Router>

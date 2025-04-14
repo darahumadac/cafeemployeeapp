@@ -12,6 +12,7 @@ import {
   FormControlLabel,
   Radio,
   FormLabel,
+  Autocomplete,
 } from "@mui/material";
 import Alert from "@mui/material/Alert";
 import { Link, useNavigate } from "react-router-dom";
@@ -31,7 +32,7 @@ const validators = {
   phoneNumber: {
     isValid: (value) => value && /^(8|9)[0-9]{7}$/.test(value),
     helperText: "Invalid SG phone number",
-  }
+  },
 };
 
 const EmployeeFormPage = ({ title, populate = false, entity }) => {
@@ -50,22 +51,33 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
     name: { value: "", isValid: true },
     emailAddress: { value: "", isValid: true },
     phoneNumber: { value: "", isValid: true },
-    gender: { value: true, isValid: true }
+    gender: { value: 0, isValid: true },
+    assignedCafeId: { value: null, isValid: true },
   };
 
   const [formData, setFormData] = useState(clearForm);
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [etag, setEtag] = useState("");
   const cafeRef = useRef(null);
-  const [selected, setSelected] = useState("Not Assigned");
+  const [selected, setSelected] = useState(null);
   const [cafes, setCafes] = useState([]);
 
   useEffect(() => {
     //TODO: implement location endpoint
+    // if(populate) return;
     axios.get(`${API_URL}/cafes`).then((response) => {
       const allCafes = response.data;
       cafeRef.current = allCafes;
-      setCafes(allCafes.map(c => c.name));
+      // console.log(
+      //   allCafes.map((c) => {
+      //     return { label: c.name, id: c.id };
+      //   })
+      // );
+      setCafes(
+        allCafes.map((c) => {
+          return { label: `${c.name} - ${c.location}`, id: c.id };
+        })
+      );
     });
   }, []);
 
@@ -116,7 +128,6 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (Object.keys(formData).some((field) => !formData[field].isValid)) {
-      console.log(formData)
       return;
     }
     console.log("Submitted User Info:", formData);
@@ -154,7 +165,6 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
       return;
     }
 
-    console.log(formData.gender.value)
 
     axios
       .post(`${ADD_URL}`, {
@@ -162,7 +172,7 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
         emailAddress: formData.emailAddress.value,
         phoneNumber: formData.phoneNumber.value,
         gender: Number(formData.gender.value),
-        assignedCafeId: cafeRef.current.filter(c => c.name == selected)[0].id
+        assignedCafeId: selected,
       })
       .then((response) => {
         showAlert("success", "Successfully added");
@@ -177,14 +187,17 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
   };
 
   const clearFormData = () => {
+    setSelected(null);
     setFormData(clearForm);
   };
 
-  const handleCafeChange = (e) => {
-    console.log("cafe change", e.target.value);
-    setSelected(e.target.value)
+  const handleCafeChange = (e, newValue) => {
+    setSelected(newValue.id);
+    setFormData({
+      ...formData,
+      assignedCafeId: { value: newValue.id, isValid: true },
+    });
   };
-
 
   return (
     <Box
@@ -237,17 +250,30 @@ const EmployeeFormPage = ({ title, populate = false, entity }) => {
         }
       ></TextField>
       <FormLabel>Gender</FormLabel>
-      <RadioGroup defaultValue={0} name="gender" onChange={handleChange}>
+      <RadioGroup
+        defaultValue={0}
+        name="gender"
+        onChange={handleChange}
+        value={formData.gender.value}
+      >
         <FormControlLabel value={0} control={<Radio />} label="Male" />
         <FormControlLabel value={1} control={<Radio />} label="Female" />
       </RadioGroup>
-      <Dropdown
-        defaultSelection={"Not Assigned"}
-        label={"Location"}
-        items={cafes}
-        selected={selected}
-        setSelected={setSelected}
-        handleChange={handleCafeChange}
+      <FormLabel>Assigned Cafe</FormLabel>
+      <Autocomplete
+        disablePortal
+        options={cafes}
+        getOptionLabel={(option) => option.label}
+        sx={{ width: 300 }}
+        onChange={handleCafeChange}
+        onInputChange={handleCafeChange}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label={`${cafes.length === 0 ? "Loading" : "Select Cafe"}`}
+            value={selected}
+          />
+        )}
       />
       <Button type="submit" variant="contained">
         Submit
