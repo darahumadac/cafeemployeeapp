@@ -11,6 +11,7 @@ builder.Services.AddOpenApi();
 //Database
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("AppDb")));
 //TODO: add logging
+//TODO: read from env variables for db auth
 
 builder.Services.AddCrudServices();
 builder.Services.AddMediatR(cfg => 
