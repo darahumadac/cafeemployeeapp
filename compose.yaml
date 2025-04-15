@@ -15,11 +15,16 @@ services:
       - ASPNETCORE_URLS=http://*:80
     ports:
       - 5191:80
-  db:
-    container_name: db
+    depends_on:
+      - sql_server
+  sql_server:
+    container_name: sql_server
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=yourStrong(!)Password
+      - MSSQL_SA_PASSWORD=sQLs3rverRpAssw0rD!!
     ports:
       - 1433:1433
+    volumes:
+      - /c/Apps/cafeemployeeapp/db/data:/var/opt/mssql/data
+      - /c/Apps/cafeemployeeapp/db/log:/var/opt/mssql/log

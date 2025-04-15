@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine as build
 WORKDIR /app
 # Stage 1 - Publish the api
 # Restore dependencies
@@ -9,7 +9,7 @@ COPY . .
 RUN dotnet publish -c Release -o ./publish
 
 # Stage 2 - Host the api
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 80
